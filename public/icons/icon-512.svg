@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Miaosic icon">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="42" x2="448" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9AE6FF"/>
+      <stop offset="0.52" stop-color="#7FE19E"/>
+      <stop offset="1" stop-color="#FFD86F"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="26" stdDeviation="22" flood-color="#102530" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="#0F2530"/>
+  <circle cx="256" cy="256" r="194" fill="url(#bg)" filter="url(#shadow)"/>
+  <path d="M165 235c0-58 40-100 91-100s91 42 91 100v53c0 56-40 90-91 90s-91-34-91-90v-53Z" fill="#FFFDF7" stroke="#17242C" stroke-width="18"/>
+  <path d="M176 166 128 112v106" fill="#FFFDF7" stroke="#17242C" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M336 166 384 112v106" fill="#FFFDF7" stroke="#17242C" stroke-width="18" stroke-linejoin="round"/>
+  <circle cx="213" cy="250" r="18" fill="#17242C"/>
+  <circle cx="299" cy="250" r="18" fill="#17242C"/>
+  <path d="M246 288h20l-10 17-10-17Z" fill="#FF8FA2" stroke="#17242C" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M208 324c22 21 74 21 96 0" fill="none" stroke="#17242C" stroke-width="14" stroke-linecap="round"/>
+  <path d="M342 316c48-6 75-33 75-78V165h-43v73c0 22-10 32-32 35v43Z" fill="#FFD86F" stroke="#17242C" stroke-width="16" stroke-linejoin="round"/>
+  <circle cx="384" cy="162" r="35" fill="#FFD86F" stroke="#17242C" stroke-width="16"/>
+</svg>
