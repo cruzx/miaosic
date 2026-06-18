@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f2530" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Meow Notes Royale" />
+  <link rel="icon" href="data:," />
+  <title>Meow Notes 3D 预览</title>
+  <style>
+    :root {
+      --paper: #fffdf7;
+      --ink: #22201d;
+      --line: #25231f;
+      --yellow: #ffd86f;
+      --green: #6fd082;
+      --rose: #ff8fa2;
+      --sky: #8fd3ff;
+      --shadow: 0 14px 0 rgba(34, 32, 29, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background:
+        radial-gradient(circle at 28% 22%, rgba(190, 236, 255, 0.24), transparent 30%),
+        radial-gradient(circle at 72% 72%, rgba(255, 216, 111, 0.12), transparent 28%),
+        linear-gradient(135deg, #111923, #0d151d 62%, #1b3138);
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Comic Sans MS", "Avenir Next", sans-serif;
+    }
+
+    .phone {
+      width: min(100%, 1180px);
+      max-height: calc(100vh - 28px);
+      aspect-ratio: 1560 / 720;
+      background: #111820;
+      border: 3px solid rgba(37, 35, 31, 0.92);
+      border-radius: 30px;
+      overflow: hidden;
+      position: relative;
+      box-shadow:
+        0 26px 80px rgba(0, 0, 0, 0.34),
+        0 0 0 10px rgba(255, 255, 255, 0.025);
+    }
+
+    .page {
+      height: 100%;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      background: #7ed2ff;
+    }
+
+    .page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 20% 36%, rgba(255, 253, 247, 0.26), transparent 19%),
+        radial-gradient(ellipse at 72% 22%, rgba(255, 253, 247, 0.22), transparent 17%),
+        radial-gradient(ellipse at 76% 78%, rgba(223, 248, 214, 0.14), transparent 24%),
+        radial-gradient(ellipse at 34% 78%, rgba(143, 211, 255, 0.18), transparent 24%);
+      filter: blur(0.2px);
+    }
+
+    .page::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 52%, transparent 44%, rgba(37, 35, 31, 0.045) 78%, rgba(37, 35, 31, 0.12)),
+        linear-gradient(180deg, rgba(255,255,255,0.18), transparent 42%, rgba(50, 103, 128, 0.06));
+      mix-blend-mode: multiply;
+    }
+
+    header {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    h1 {
+      display: none;
+    }
+
+    .sub {
+      display: none;
+    }
+
+    .score {
+      min-width: 104px;
+      border: 2px solid rgba(37, 35, 31, 0.72);
+      border-radius: 999px;
+      padding: 6px 13px 7px;
+      text-align: center;
+      background:
+        linear-gradient(180deg, rgba(255, 253, 247, 0.74), rgba(234, 247, 255, 0.54));
+      box-shadow:
+        0 8px 22px rgba(34, 32, 29, 0.075),
+        inset 0 -5px 0 rgba(34, 32, 29, 0.05);
+      backdrop-filter: blur(12px);
+    }
+
+    .score span {
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .score strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .combo-mini {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 54px;
+      margin-top: 5px;
+      padding: 3px 8px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--yellow);
+      box-shadow: inset 0 -3px 0 rgba(34, 32, 29, 0.08);
+      font-size: 10px;
+      font-weight: 900;
+      opacity: 0.58;
+      transform: scale(0.92);
+      transition: opacity 160ms ease, transform 160ms ease, background 160ms ease;
+    }
+
+    .combo-mini.hot {
+      background: #ff8fa2;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .combo-burst {
+      position: absolute;
+      right: 142px;
+      top: 22px;
+      z-index: 32;
+      min-width: 98px;
+      padding: 8px 11px;
+      border: 3px solid var(--line);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255,255,255,0.8), transparent 36%),
+        var(--yellow);
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.14),
+        0 0 0 7px rgba(255, 216, 111, 0.2);
+      font-size: 13px;
+      font-weight: 900;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px) scale(0.72) rotate(-5deg);
+    }
+
+    .combo-burst.show {
+      animation: comboBurstPop 980ms cubic-bezier(.18, 1.38, .28, 1) both;
+    }
+
+    .combo-burst.reset {
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255,255,255,0.8), transparent 36%),
+        #ffdce1;
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.14),
+        0 0 0 7px rgba(255, 143, 162, 0.2);
+    }
+
+    .combo-burst strong {
+      display: block;
+      font-size: 20px;
+      line-height: 0.95;
+    }
+
+    .combo-burst span {
+      display: block;
+      margin-top: 2px;
+      font-size: 10px;
+      color: rgba(34, 32, 29, 0.66);
+    }
+
+    @keyframes comboBurstPop {
+      0% { opacity: 0; transform: translateY(16px) scale(0.72) rotate(-5deg); }
+      18% { opacity: 1; transform: translateY(-5px) scale(1.08) rotate(2deg); }
+      74% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+      100% { opacity: 0; transform: translateY(-16px) scale(0.94) rotate(0); }
+    }
+
+    .tabs {
+      position: absolute;
+      left: 16px;
+      top: 14px;
+      z-index: 20;
+      display: flex;
+      gap: 7px;
+      padding: 5px;
+      border: 2px solid rgba(37, 35, 31, 0.18);
+      border-radius: 26px;
+      background: rgba(255, 253, 247, 0.2);
+      box-shadow:
+        0 10px 28px rgba(55, 116, 145, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.48);
+      backdrop-filter: blur(10px);
+    }
+
+    .tabs button {
+      min-width: 74px;
+      padding: 7px 9px 8px 30px;
+      position: relative;
+      text-align: left;
+      line-height: 1.05;
+      border-width: 2px;
+      border-color: rgba(37, 35, 31, 0.58);
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(255,255,255,0.72), transparent 32%),
+        rgba(255, 253, 247, 0.46);
+      backdrop-filter: blur(12px);
+      box-shadow:
+        0 5px 0 rgba(34, 32, 29, 0.08),
+        0 9px 18px rgba(34, 32, 29, 0.055);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .tabs button::before {
+      content: attr(data-kind);
+      display: block;
+      margin-bottom: 3px;
+      color: rgba(34, 32, 29, 0.58);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .tabs button::after {
+      content: "♪";
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      width: 17px;
+      height: 17px;
+      display: grid;
+      place-items: center;
+      margin-top: 0;
+      border: 2px solid rgba(37, 35, 31, 0.64);
+      border-radius: 50%;
+      background: rgba(255, 216, 111, 0.88);
+      color: rgba(34, 32, 29, 0.62);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      transform: translateY(-50%);
+    }
+
+    button {
+      font: inherit;
+      border: 3px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 14px;
+      padding: 10px 13px;
+      cursor: pointer;
+      box-shadow: 4px 5px 0 rgba(34, 32, 29, 0.12);
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(3px);
+      box-shadow: 1px 2px 0 rgba(34, 32, 29, 0.12);
+    }
+
+    button.active {
+      background:
+        radial-gradient(circle at 22% 18%, rgba(255,255,255,0.65), transparent 38%),
+        rgba(255, 216, 111, 0.92);
+      box-shadow:
+        0 7px 18px rgba(34, 32, 29, 0.08),
+        0 0 0 5px rgba(255, 216, 111, 0.15);
+    }
+
+    .tabs button.active::after {
+      content: "♪";
+      width: 17px;
+      min-width: 0;
+      padding: 0;
+      border-radius: 50%;
+      background: #fff3a3;
+      font-size: 10px;
+    }
+
+    .board {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: none;
+      background: #86d4ff;
+    }
+
+    #scene {
+      position: absolute;
+      inset: 0;
+      cursor: grab;
+    }
+
+    #scene canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #scene.grabbing {
+      cursor: grabbing;
+    }
+
+    .hint {
+      position: absolute;
+      left: clamp(300px, 38vw, 460px);
+      right: auto;
+      top: 102px;
+      bottom: auto;
+      z-index: 24;
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      pointer-events: none;
+      transform: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .hint-text {
+      width: fit-content;
+      max-width: min(248px, 28vw);
+      border: 2px solid rgba(37, 35, 31, 0.9);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(255, 253, 247, 0.66);
+      box-shadow:
+        0 7px 18px rgba(34, 32, 29, 0.08),
+        inset 0 -5px 0 rgba(34, 32, 29, 0.05);
+      backdrop-filter: blur(12px);
+      font-size: 11px;
+      line-height: 1.18;
+      font-weight: 800;
+    }
+
+    .hint-text::before {
+      content: "任务";
+      display: inline-grid;
+      place-items: center;
+      margin-right: 8px;
+      padding: 2px 6px 3px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--yellow);
+      font-size: 10px;
+      line-height: 1;
+      vertical-align: 2px;
+      box-shadow: inset 0 -3px 0 rgba(34, 32, 29, 0.08);
+    }
+
+    .round {
+      border: 2px solid rgba(37, 35, 31, 0.9);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.74);
+      padding: 5px 9px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .lesson-bar {
+      position: absolute;
+      left: 50%;
+      top: 18px;
+      z-index: 19;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      padding: 9px 13px;
+      border: 3px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.68);
+      box-shadow: 0 8px 22px rgba(34, 32, 29, 0.08);
+      backdrop-filter: blur(8px);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .lesson-bar span {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      background: #eaf7ff;
+      box-shadow: inset 0 -3px 0 rgba(34, 32, 29, 0.08);
+    }
+
+    .lesson-bar span.done {
+      background: var(--green);
+    }
+
+    .lesson-bar span.current {
+      background: var(--yellow);
+      transform: scale(1.18);
+    }
+
+    .quest-ribbon {
+      position: absolute;
+      left: 50%;
+      top: 62px;
+      z-index: 23;
+      min-width: 254px;
+      max-width: min(430px, 40vw);
+      padding: 8px 12px 9px 48px;
+      border: 2px solid rgba(37, 35, 31, 0.72);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 14% 28%, rgba(255, 255, 255, 0.8), transparent 32%),
+        linear-gradient(135deg, rgba(255, 253, 247, 0.74), rgba(223, 248, 214, 0.54));
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.07),
+        0 16px 30px rgba(54, 121, 147, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(14px);
+      pointer-events: none;
+      transform: translateX(-50%);
+      transition: opacity 180ms ease, transform 220ms cubic-bezier(.2, 1.2, .3, 1);
+    }
+
+    .quest-ribbon::before {
+      content: attr(data-icon);
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(37, 35, 31, 0.78);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.82), transparent 38%),
+        var(--yellow);
+      box-shadow: inset 0 -4px 0 rgba(34, 32, 29, 0.08);
+      font-size: 15px;
+      font-weight: 900;
+      transform: translateY(-50%);
+    }
+
+    .quest-ribbon strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.05;
+    }
+
+    .quest-ribbon span {
+      display: block;
+      margin-top: 2px;
+      color: rgba(34, 32, 29, 0.58);
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .page.mission-open .quest-ribbon,
+    .page.reward-open .quest-ribbon {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-10px) scale(0.96);
+    }
+
+    .quest-ribbon.listen {
+      background:
+        radial-gradient(circle at 14% 28%, rgba(255, 255, 255, 0.8), transparent 32%),
+        linear-gradient(135deg, rgba(255, 253, 247, 0.82), rgba(255, 242, 166, 0.52));
+    }
+
+    .quest-ribbon.catch {
+      background:
+        radial-gradient(circle at 14% 28%, rgba(255, 255, 255, 0.8), transparent 32%),
+        linear-gradient(135deg, rgba(255, 253, 247, 0.76), rgba(143, 211, 255, 0.5));
+    }
+
+    .quest-ribbon.feed {
+      background:
+        radial-gradient(circle at 14% 28%, rgba(255, 255, 255, 0.8), transparent 32%),
+        linear-gradient(135deg, rgba(255, 253, 247, 0.76), rgba(111, 208, 130, 0.5));
+    }
+
+    .rotate-tip {
+      position: absolute;
+      left: 50%;
+      bottom: 28px;
+      z-index: 18;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border: 2px solid rgba(37, 35, 31, 0.88);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.68);
+      box-shadow: 0 6px 0 rgba(34, 32, 29, 0.08);
+      backdrop-filter: blur(9px);
+      color: rgba(34, 32, 29, 0.72);
+      font-size: 11px;
+      font-weight: 900;
+      pointer-events: none;
+      transform: translateX(-50%);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .rotate-tip::before {
+      content: "↻";
+      display: grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--yellow);
+      color: var(--ink);
+      box-shadow: inset 0 -3px 0 rgba(34, 32, 29, 0.08);
+    }
+
+    .gesture-guide {
+      position: absolute;
+      left: 50%;
+      bottom: 58px;
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 190px;
+      padding: 8px 13px 8px 10px;
+      border: 2px solid rgba(37, 35, 31, 0.86);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 18% 30%, rgba(255, 255, 255, 0.72), transparent 34%),
+        rgba(255, 253, 247, 0.72);
+      box-shadow:
+        0 8px 0 rgba(34, 32, 29, 0.08),
+        0 0 0 6px rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      font-weight: 900;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateX(-50%) translateY(14px) scale(0.92);
+      transition: opacity 180ms ease, transform 220ms cubic-bezier(.2, 1.4, .3, 1);
+    }
+
+    .gesture-guide.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    .gesture-guide .gesture-hand {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: inset 0 -4px 0 rgba(34, 32, 29, 0.08);
+      font-size: 18px;
+      animation: guideHand 980ms ease-in-out infinite;
+    }
+
+    .gesture-guide strong {
+      display: block;
+      line-height: 1.08;
+    }
+
+    .gesture-guide span:last-child {
+      display: block;
+      color: rgba(34, 32, 29, 0.58);
+      font-size: 9px;
+      line-height: 1.08;
+      margin-top: 1px;
+    }
+
+    @keyframes guideHand {
+      0%, 100% { transform: translateX(0) translateY(0) rotate(-8deg); }
+      50% { transform: translateX(5px) translateY(-2px) rotate(5deg); }
+    }
+
+    .feedback {
+      position: absolute;
+      right: 20px;
+      bottom: 18px;
+      z-index: 21;
+      width: min(178px, 18vw);
+      min-height: 38px;
+      padding: 7px 9px 7px 31px;
+      border: 2px solid rgba(37, 35, 31, 0.48);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255, 253, 247, 0.38), rgba(234, 247, 255, 0.24));
+      box-shadow:
+        0 6px 18px rgba(34, 32, 29, 0.045),
+        inset 0 1px 0 rgba(255,255,255,0.45);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .feedback::before {
+      content: "♪";
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(37, 35, 31, 0.72);
+      border-radius: 50%;
+      background: var(--yellow);
+      font-size: 13px;
+      font-weight: 900;
+      transform: translateY(-50%);
+      box-shadow: inset 0 -3px 0 rgba(34, 32, 29, 0.09);
+    }
+
+    .feedback strong {
+      display: block;
+      font-size: 11px;
+      line-height: 1.05;
+      margin-bottom: 2px;
+    }
+
+    .feedback p {
+      margin: 0;
+      font-size: 8px;
+      line-height: 1.18;
+      font-weight: 800;
+      color: rgba(34, 32, 29, 0.72);
+    }
+
+    .coach {
+      position: absolute;
+      right: 20px;
+      top: 154px;
+      z-index: 21;
+      width: 148px;
+      padding: 8px 10px;
+      border: 2px solid rgba(37, 35, 31, 0.46);
+      border-radius: 16px 16px 16px 7px;
+      background: rgba(255, 255, 255, 0.48);
+      box-shadow:
+        0 5px 16px rgba(34, 32, 29, 0.045),
+        inset 0 1px 0 rgba(255,255,255,0.5);
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+      transform-origin: 50% 100%;
+      animation: coachFloat 1800ms ease-in-out infinite;
+    }
+
+    .coach.good {
+      background: rgba(223, 248, 214, 0.93);
+    }
+
+    .coach.hot {
+      background: rgba(255, 216, 111, 0.94);
+      transform: scale(1.04);
+    }
+
+    .coach strong {
+      display: block;
+      font-size: 10px;
+      margin-bottom: 1px;
+    }
+
+    .coach p {
+      margin: 0;
+      font-size: 7px;
+      line-height: 1.18;
+      font-weight: 800;
+      color: rgba(34, 32, 29, 0.68);
+    }
+
+    .learned {
+      position: absolute;
+      left: 24px;
+      top: 126px;
+      bottom: auto;
+      z-index: 21;
+      min-width: 132px;
+      max-width: 170px;
+      padding: 9px 10px 10px;
+      border: 2px solid rgba(37, 35, 31, 0.54);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 14% 16%, rgba(255, 216, 111, 0.36), transparent 34%),
+        radial-gradient(circle at 92% 12%, rgba(143, 211, 255, 0.22), transparent 32%),
+        linear-gradient(180deg, rgba(255, 253, 247, 0.68), rgba(234, 247, 255, 0.42));
+      box-shadow:
+        0 8px 18px rgba(34, 32, 29, 0.055),
+        0 0 0 6px rgba(255,255,255,0.12),
+        inset 0 -5px 0 rgba(34, 32, 29, 0.04);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .page.hunt-open .learned,
+    .page.hunt-open .feedback {
+      opacity: 0.32;
+      transform: translateY(6px) scale(0.96);
+    }
+
+    .page.dragging-cat .learned,
+    .page.dragging-cat .feedback,
+    .page.dragging-cat .hint {
+      opacity: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+
+    .page.dragging-cat .hint {
+      transform: translateY(10px) scale(0.94);
+    }
+
+    .learned-title {
+      margin-bottom: 7px;
+      font-size: 9px;
+      font-weight: 900;
+      color: rgba(34, 32, 29, 0.62);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .learned-title::after {
+      content: "album";
+      padding: 2px 7px;
+      border: 1px solid rgba(37, 35, 31, 0.4);
+      border-radius: 999px;
+      background: rgba(255, 216, 111, 0.46);
+      color: rgba(34, 32, 29, 0.58);
+      font-size: 7px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .learned-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .learned-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 34px;
+      position: relative;
+      padding: 13px 8px 5px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 22% 18%, rgba(255,255,255,0.72), transparent 34%),
+        linear-gradient(180deg, var(--card-color, #ffd86f), #fff3a3);
+      box-shadow:
+        0 4px 0 rgba(34, 32, 29, 0.12),
+        inset 0 -4px 0 rgba(34, 32, 29, 0.08);
+      font-size: 8px;
+      font-weight: 900;
+      transform: rotate(-1deg);
+    }
+
+    .learned-badge::before {
+      content: attr(data-kind);
+      position: absolute;
+      left: 6px;
+      top: 4px;
+      color: rgba(34, 32, 29, 0.58);
+      font-size: 6px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .learned-badge::after {
+      content: "♪";
+      position: absolute;
+      right: 5px;
+      top: 3px;
+      color: rgba(34, 32, 29, 0.42);
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .learned-badge.new {
+      background: #fff3a3;
+      animation: cardPop 620ms cubic-bezier(.2, 1.4, .3, 1) both;
+      box-shadow:
+        inset 0 -4px 0 rgba(34, 32, 29, 0.08),
+        0 0 0 5px rgba(255, 216, 111, 0.22);
+    }
+
+    .learned-empty {
+      color: rgba(34, 32, 29, 0.52);
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    @keyframes cardPop {
+      0% { transform: translateY(7px) scale(0.55) rotate(-8deg); opacity: 0; }
+      58% { transform: translateY(-3px) scale(1.14) rotate(3deg); opacity: 1; }
+      100% { transform: translateY(0) scale(1) rotate(0); opacity: 1; }
+    }
+
+    @keyframes coachFloat {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -4px; }
+    }
+
+    .controls {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 20px;
+      z-index: 22;
+      display: contents;
+      pointer-events: none;
+    }
+
+    .controls button {
+      position: absolute;
+      bottom: 20px;
+      z-index: 22;
+      min-width: 142px;
+      border-radius: 999px;
+      padding: 12px 20px 12px 44px;
+      pointer-events: auto;
+      border-color: rgba(37, 35, 31, 0.8);
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.13),
+        0 12px 26px rgba(34, 32, 29, 0.08);
+    }
+
+    .controls button::before {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(37, 35, 31, 0.72);
+      border-radius: 50%;
+      background: rgba(255, 253, 247, 0.76);
+      box-shadow: inset 0 -4px 0 rgba(34, 32, 29, 0.08);
+      transform: translateY(-50%);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .page.mission-open #listenBtn {
+      opacity: 0.42;
+      transform: translateY(10px) scale(0.94);
+      pointer-events: none;
+    }
+
+    .page.mission-open .hint {
+      opacity: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+
+    .page.mission-open .rotate-tip {
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px) scale(0.94);
+    }
+
+    #listenBtn {
+      left: 54px;
+    }
+
+    #nextBtn {
+      right: 22px;
+      bottom: auto;
+      top: 86px;
+    }
+
+    .feed-target {
+      position: absolute;
+      left: 58px;
+      bottom: 52px;
+      z-index: 23;
+      width: 210px;
+      height: 132px;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .feed-target::before {
+      content: "";
+      position: absolute;
+      left: 13px;
+      right: 13px;
+      bottom: 4px;
+      height: 44px;
+      border: 4px solid var(--line);
+      border-radius: 0 0 48px 48px;
+      background: linear-gradient(#ffd979, #ffbd58);
+      box-shadow: inset 0 -8px 0 rgba(34, 32, 29, 0.08);
+    }
+
+    .feed-target::after {
+      content: "猫粮";
+      position: absolute;
+      left: 50%;
+      bottom: -18px;
+      translate: -50% 0;
+      padding: 2px 10px;
+      border: 3px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
+      font-size: 14px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .feed-target .food-dot {
+      position: absolute;
+      width: 17px;
+      height: 12px;
+      border: 3px solid var(--line);
+      border-radius: 50%;
+      background: #b87531;
+    }
+
+    .feed-target .food-dot:nth-child(1) { left: 44px; top: 36px; rotate: -10deg; }
+    .feed-target .food-dot:nth-child(2) { left: 65px; top: 24px; rotate: 12deg; }
+    .feed-target .food-dot:nth-child(3) { left: 86px; top: 38px; rotate: -6deg; }
+    .feed-target .food-dot:nth-child(4) { left: 60px; top: 50px; rotate: 8deg; }
+
+    @keyframes feedBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .primary {
+      background:
+        radial-gradient(circle at 22% 18%, rgba(255,255,255,0.74), transparent 32%),
+        linear-gradient(180deg, #ffe48a, #ffc15e);
+      font-weight: 900;
+    }
+
+    .primary::before {
+      content: "♪";
+    }
+
+    .primary.heard {
+      background:
+        radial-gradient(circle at 22% 18%, rgba(255,255,255,0.74), transparent 32%),
+        linear-gradient(180deg, #fff3a3, #ffd66f);
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.18),
+        0 0 0 6px rgba(255, 216, 111, 0.18);
+    }
+
+    .next {
+      background:
+        radial-gradient(circle at 22% 18%, rgba(255,255,255,0.7), transparent 32%),
+        linear-gradient(180deg, #9be7a6, #61c978);
+      color: #102014;
+      font-weight: 900;
+    }
+
+    .next::before {
+      content: "✓";
+    }
+
+    .next.ready {
+      animation: nextPulse 820ms ease-in-out infinite;
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.18),
+        0 0 0 7px rgba(111, 208, 130, 0.24);
+    }
+
+    .next:disabled {
+      opacity: 0;
+      cursor: default;
+      pointer-events: none;
+      transform: translateY(12px);
+    }
+
+    .page.reward-open #nextBtn {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px) scale(0.94);
+    }
+
+    @keyframes nextPulse {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-2px) scale(1.035); }
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      right: auto;
+      bottom: 86px;
+      min-width: 280px;
+      padding: 16px;
+      border: 4px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      text-align: center;
+      opacity: 0;
+      transform: translate(-50%, 220px);
+      transition: transform 180ms ease;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .toast.good {
+      background: #dff8d6;
+    }
+
+    .toast.bad {
+      background: #ffdce1;
+    }
+
+    .reward-card {
+      position: absolute;
+      right: 18px;
+      bottom: 86px;
+      z-index: 29;
+      width: min(286px, 25vw);
+      padding: 10px 12px 11px 70px;
+      border: 2px solid rgba(37, 35, 31, 0.9);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 18% 50%, rgba(255, 216, 111, 0.24), transparent 36%),
+        linear-gradient(135deg, rgba(255, 253, 247, 0.98), rgba(238, 251, 255, 0.86));
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.12),
+        0 0 0 6px rgba(255, 255, 255, 0.18),
+        0 16px 34px rgba(45, 93, 108, 0.13);
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(24px) translateY(10px) scale(0.9) rotate(2deg);
+      transition: opacity 180ms ease, transform 220ms cubic-bezier(.2, 1.4, .3, 1);
+    }
+
+    .reward-card.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0) translateY(0) scale(1) rotate(0);
+    }
+
+    .reward-card.group-clear {
+      right: 50%;
+      bottom: 76px;
+      width: min(430px, 42vw);
+      padding: 16px 18px 16px 92px;
+      transform: translateX(50%) translateY(18px) scale(0.9) rotate(-1deg);
+      background:
+        radial-gradient(circle at 18% 50%, rgba(255, 216, 111, 0.4), transparent 35%),
+        radial-gradient(circle at 90% 12%, rgba(111, 208, 130, 0.24), transparent 28%),
+        linear-gradient(135deg, rgba(255, 253, 247, 0.98), rgba(223, 248, 214, 0.94));
+      box-shadow:
+        0 14px 0 rgba(34, 32, 29, 0.14),
+        0 0 0 10px rgba(255, 216, 111, 0.18),
+        0 24px 58px rgba(34, 32, 29, 0.18);
+    }
+
+    .reward-card.group-clear.show {
+      transform: translateX(50%) translateY(0) scale(1) rotate(0);
+    }
+
+    .reward-card::before {
+      content: "♪";
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      background: var(--yellow);
+      font-size: 25px;
+      font-weight: 900;
+      transform: translateY(-50%) rotate(-5deg);
+      box-shadow: inset 0 -6px 0 rgba(34, 32, 29, 0.08);
+    }
+
+    .reward-card strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.05;
+      margin-bottom: 4px;
+    }
+
+    .reward-card p {
+      margin: 0;
+      font-size: 9px;
+      line-height: 1.25;
+      font-weight: 900;
+      color: rgba(34, 32, 29, 0.68);
+    }
+
+    .reward-card span {
+      display: inline-flex;
+      margin-top: 7px;
+      padding: 4px 8px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: #dff8d6;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .reward-card span::before {
+      content: "✓";
+      display: inline-grid;
+      place-items: center;
+      width: 15px;
+      height: 15px;
+      margin-right: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #102014;
+      font-size: 9px;
+    }
+
+    .reward-card.group-clear span {
+      background: var(--yellow);
+    }
+
+    .reward-card.group-clear::before {
+      content: "★";
+      background: var(--green);
+      transform: translateY(-50%) rotate(8deg);
+    }
+
+    .reward-card.group-clear strong {
+      font-size: 20px;
+    }
+
+    .reward-card.group-clear p {
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .reward-card.show::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      z-index: -1;
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at 24% 42%, rgba(255, 216, 111, 0.38), transparent 32%),
+        radial-gradient(circle at 78% 24%, rgba(143, 211, 255, 0.28), transparent 28%);
+      opacity: 0.86;
+      animation: rewardGlow 1200ms ease-in-out infinite;
+    }
+
+    @keyframes rewardGlow {
+      0%, 100% { transform: scale(0.98); opacity: 0.72; }
+      50% { transform: scale(1.03); opacity: 0.95; }
+    }
+
+    .round-banner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 31;
+      min-width: 190px;
+      padding: 15px 20px;
+      border: 4px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.94);
+      box-shadow: 0 12px 0 rgba(34, 32, 29, 0.14);
+      font-size: 25px;
+      font-weight: 900;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0.62) rotate(-4deg);
+    }
+
+    .round-banner.show {
+      animation: roundBannerPop 900ms cubic-bezier(.18, 1.32, .28, 1) both;
+    }
+
+    .round-banner.complete {
+      background: #dff8d6;
+    }
+
+    @keyframes roundBannerPop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.62) rotate(-4deg); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.08) rotate(2deg); }
+      72% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+      100% { opacity: 0; transform: translate(-50%, -62%) scale(0.96) rotate(0); }
+    }
+
+    .mission {
+      position: absolute;
+      left: auto;
+      right: 18px;
+      top: 104px;
+      bottom: auto;
+      z-index: 40;
+      width: 204px;
+      padding: 0;
+      background: transparent;
+      backdrop-filter: none;
+      transform: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .mission.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px) scale(0.98);
+    }
+
+    .mission-card {
+      width: 100%;
+      border: 2px solid rgba(37, 35, 31, 0.86);
+      border-radius: 21px;
+      padding: 9px 10px 10px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.78), transparent 22%),
+        radial-gradient(circle at 20% 8%, rgba(255, 216, 111, 0.38), transparent 36%),
+        linear-gradient(150deg, rgba(255, 253, 247, 0.88), rgba(223, 248, 214, 0.72)),
+        rgba(255, 253, 247, 0.76);
+      box-shadow:
+        0 9px 0 rgba(34, 32, 29, 0.1),
+        0 18px 36px rgba(45, 93, 108, 0.16),
+        inset 0 -7px 0 rgba(34, 32, 29, 0.04);
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mission-card::before {
+      content: "♪";
+      position: absolute;
+      right: 13px;
+      top: 13px;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--line);
+      border-radius: 15px;
+      background: var(--yellow);
+      box-shadow: inset 0 -5px 0 rgba(34, 32, 29, 0.08);
+      font-size: 20px;
+      font-weight: 900;
+      transform: rotate(8deg);
+    }
+
+    .mission-card::after {
+      content: "完成后获得音卡";
+      display: inline-flex;
+      margin-top: 8px;
+      padding: 4px 8px;
+      border: 2px solid rgba(37, 35, 31, 0.78);
+      border-radius: 999px;
+      background: rgba(255, 216, 111, 0.72);
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .mission-eyebrow {
+      display: inline-block;
+      margin-bottom: 5px;
+      padding: 3px 7px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--yellow);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .mission-card h2 {
+      margin: 0 46px 3px 0;
+      font-size: 17px;
+      line-height: 1.04;
+    }
+
+    .mission-card p {
+      margin: 0;
+      font-size: 9px;
+      line-height: 1.32;
+      font-weight: 800;
+      color: rgba(34, 32, 29, 0.72);
+    }
+
+    .mission-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin: 6px 0 8px;
+    }
+
+    .mission-step {
+      min-height: auto;
+      border: 2px solid var(--line);
+      border-radius: 15px;
+      padding: 4px 3px;
+      background: #fff;
+      box-shadow: inset 0 -4px 0 rgba(34, 32, 29, 0.06);
+      font-size: 8px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .mission-step strong {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      margin: 0 auto 3px;
+      border-radius: 50%;
+      background: var(--yellow);
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .mission button {
+      width: 100%;
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 760px), (max-height: 520px) {
+      body {
+        padding: 0;
+      }
+
+      .phone {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        aspect-ratio: auto;
+        border: 0;
+        border-radius: 0;
+      }
+
+      .page {
+        min-height: 100%;
+      }
+
+      .tabs {
+        left: 10px;
+        top: 10px;
+        gap: 5px;
+        padding: 4px;
+      }
+
+      .tabs button {
+        padding: 8px 9px 8px 29px;
+        font-size: 12px;
+        min-width: 76px;
+      }
+
+      .tabs button::before,
+      .tabs button::after {
+        font-size: 8px;
+      }
+
+      header {
+        top: 10px;
+        right: 10px;
+      }
+
+      .hint {
+        left: clamp(290px, 39vw, 430px);
+        right: auto;
+        top: 92px;
+        bottom: auto;
+        transform: none;
+      }
+
+      .lesson-bar {
+        top: 11px;
+        gap: 4px;
+        padding: 7px 10px;
+      }
+
+      .lesson-bar span {
+        width: 14px;
+        height: 14px;
+      }
+
+      .rotate-tip {
+        bottom: 8px;
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+
+      .hint-text {
+        max-width: min(220px, 31vw);
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+
+      .round {
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+
+      .coach {
+        top: 142px;
+      }
+
+      .controls {
+        display: contents;
+      }
+
+      .controls button {
+        min-width: 128px;
+        padding: 11px 15px 11px 42px;
+        bottom: 12px;
+      }
+
+      .feedback {
+        right: 12px;
+        bottom: 10px;
+        width: min(190px, 26vw);
+        padding: 8px 9px 8px 33px;
+      }
+
+      .feedback strong {
+        font-size: 11px;
+      }
+
+      .feedback p {
+        font-size: 8px;
+      }
+
+      .coach {
+        right: 12px;
+        top: 108px;
+        width: 126px;
+        padding: 7px 9px;
+      }
+
+      .coach strong {
+        font-size: 10px;
+      }
+
+      .coach p {
+        font-size: 8px;
+      }
+
+      .learned {
+        left: 12px;
+        top: 120px;
+        bottom: auto;
+        max-width: 126px;
+        padding: 6px 8px;
+      }
+
+      .learned-title {
+        margin-bottom: 4px;
+        font-size: 9px;
+      }
+
+      .learned-badge {
+        min-width: 28px;
+        padding: 3px 5px;
+        font-size: 8px;
+      }
+
+      #listenBtn {
+        left: 12px;
+      }
+
+      .feed-target {
+        left: 78px;
+        bottom: 104px;
+        width: 202px;
+        height: 132px;
+      }
+
+      #nextBtn {
+        right: 12px;
+        top: 58px;
+      }
+
+      .mission {
+        left: auto;
+        right: 184px;
+        top: 88px;
+        width: 218px;
+      }
+
+      .reward-card {
+        right: 10px;
+        bottom: 78px;
+        width: min(300px, 36vw);
+        padding: 10px 12px 11px 68px;
+      }
+
+      .reward-card::before {
+        left: 13px;
+        width: 42px;
+        height: 42px;
+        font-size: 24px;
+      }
+
+      .reward-card strong {
+        font-size: 14px;
+      }
+
+      .reward-card p,
+      .reward-card span {
+        font-size: 9px;
+      }
+
+      .mission-card {
+        padding: 9px 10px 10px;
+        border-radius: 20px;
+      }
+
+      .mission-card h2 {
+        font-size: 16px;
+      }
+
+      .mission-card p {
+        margin-bottom: 7px;
+        font-size: 9px;
+      }
+
+      .mission-steps {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        margin: 7px 0 9px;
+      }
+
+      .mission-step {
+        min-height: 0;
+        padding: 5px 4px;
+        font-size: 8px;
+      }
+
+      .mission-step strong {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <div class="page">
+      <header>
+        <div>
+          <h1>Meow Notes</h1>
+          <p class="sub">听食物的声音，找到叫声一样的猫，把它抓起来喂给猫粮。</p>
+        </div>
+        <div class="score">
+          <span>score</span>
+          <strong id="score">0</strong>
+          <div class="combo-mini" id="comboMini">combo 0</div>
+        </div>
+      </header>
+
+      <div class="combo-burst" id="comboBurst">
+        <strong>+10</strong>
+        <span>combo 1</span>
+      </div>
+
+      <div class="tabs">
+        <button class="active" data-stage="note3" data-kind="Pitch" data-stars="★☆☆">单音 1</button>
+        <button data-stage="note5" data-kind="Pitch" data-stars="★★☆">单音 2</button>
+        <button data-stage="chord3" data-kind="Chord" data-stars="★★★">和弦 1</button>
+      </div>
+
+      <section class="board" id="board">
+        <div id="scene" aria-label="3D cat game"></div>
+        <div class="hint">
+          <div class="hint-text" id="prompt">1. 点猫粮，仔细听</div>
+          <div class="round" id="round">1 / 6</div>
+        </div>
+        <div class="lesson-bar" id="lessonBar" aria-hidden="true"></div>
+        <div class="quest-ribbon listen" id="questRibbon" data-icon="♪" aria-live="polite">
+          <strong id="questTitle">先听猫粮</strong>
+          <span id="questText">记住这次的声音，再去星球上找同声猫。</span>
+        </div>
+        <div class="rotate-tip">拖空地旋转地球找猫</div>
+        <div class="gesture-guide" id="gestureGuide" aria-hidden="true">
+          <span class="gesture-hand">☝</span>
+          <div>
+            <strong id="gestureTitle">点猫听叫声</strong>
+            <span id="gestureText">听完猫粮后，去试试每只猫。</span>
+          </div>
+        </div>
+        <div class="coach" id="coach">
+          <strong>先听</strong>
+          <p>点猫粮记声音。</p>
+        </div>
+        <div class="learned" id="learnedPanel">
+          <div class="learned-title">已学会</div>
+          <div class="learned-list" id="learnedList">
+            <span class="learned-empty">还没有音卡</span>
+          </div>
+        </div>
+        <div class="feed-target" id="feedTarget" aria-hidden="true">
+          <span class="food-dot"></span>
+          <span class="food-dot"></span>
+          <span class="food-dot"></span>
+          <span class="food-dot"></span>
+        </div>
+        <div class="mission" id="mission">
+          <div class="mission-card">
+            <span class="mission-eyebrow" id="missionEyebrow">听音训练</span>
+            <h2 id="missionTitle">猫粮开饭啦</h2>
+            <p id="missionText">先听猫粮的声音，再找叫声一样的猫。玩着玩着，你会开始记住音高。</p>
+            <div class="mission-steps">
+              <div class="mission-step"><strong>1</strong>听猫粮</div>
+              <div class="mission-step"><strong>2</strong>找同声猫</div>
+              <div class="mission-step"><strong>3</strong>拖去投喂</div>
+            </div>
+            <button id="startMission" type="button">开始训练</button>
+          </div>
+        </div>
+        <div class="round-banner" id="roundBanner"></div>
+        <div class="toast" id="toast"></div>
+        <button class="reward-card" id="rewardCard" type="button" aria-live="polite">
+          <strong id="rewardTitle">音卡 +1</strong>
+          <p id="rewardText">你刚刚记住了一个声音。</p>
+          <span id="rewardMeta">点这里继续</span>
+        </button>
+      </section>
+
+      <section class="feedback" id="feedback">
+        <strong>先从单音开始</strong>
+        <p>点猫粮听目标声音，再点猫听它的叫声。抓起正确的猫，放到猫粮旁边。</p>
+      </section>
+
+      <div class="controls">
+        <button class="primary" id="listenBtn">播放猫粮</button>
+        <button class="next" id="nextBtn" disabled>下一只</button>
+      </div>
+    </div>
+  </main>
+
+    <script type="module" src="../src/static-preview.js"></script>
+
+</body>
+</html>
