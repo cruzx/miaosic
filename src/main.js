@@ -3,8 +3,10 @@ import { createGameScene } from "./scene/world.js";
 import { setupNativeBridge } from "./native/capacitor-bridge.js";
 import { mountGameShell } from "./ui/game-shell.js";
 import { mountVisionUpgrade } from "./ui/vision-upgrade.js";
+import { mountDailyQuests } from "./ui/daily-quests.js";
 
 const runtime = createGameScene({ THREE });
 setupNativeBridge(runtime);
 mountGameShell(runtime);
 mountVisionUpgrade(runtime);
+mountDailyQuests(runtime);
