@@ -7,13 +7,17 @@ const config: CapacitorConfig = {
   bundledWebRuntime: false,
   ios: {
     contentInset: "automatic",
-    backgroundColor: "#0f2530"
+    backgroundColor: "#0f2530",
+    scrollEnabled: false
   },
   plugins: {
     StatusBar: {
       style: "DARK",
       overlaysWebView: true,
       backgroundColor: "#0f2530"
+    },
+    Keyboard: {
+      resize: "none"
     }
   }
 };
