@@ -1,4 +1,4 @@
-import { getNoteKnowledge, LEARNING_GOALS } from "../config/music-knowledge.js";
+import { getNoteKnowledge, LEARNING_GOALS, RESULT_MEMORY } from "../config/music-knowledge.js";
 
 const STYLE_ID = "miaosic-music-learning-overlay-style";
 
@@ -20,20 +20,22 @@ function ensureStyle() {
       position: absolute;
       left: calc(env(safe-area-inset-left, 0px) + 18px);
       top: calc(env(safe-area-inset-top, 0px) + 142px);
-      width: min(320px, calc(100vw - 36px));
-      padding: 14px 16px;
+      width: min(330px, calc(100vw - 36px));
+      padding: 15px 16px;
       border: 4px solid #17334a;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(224,248,255,.92));
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at 18% 14%, rgba(255,255,255,.98), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,.96), rgba(224,248,255,.92));
       box-shadow: 0 7px 0 rgba(23,51,74,.22), 0 18px 34px rgba(73,184,255,.18);
       opacity: 0;
-      transform: translateY(-8px) scale(.96);
+      transform: translateY(-8px) scale(.96) rotate(-1deg);
       transition: opacity 140ms ease, transform 180ms cubic-bezier(.2, 1.5, .3, 1);
     }
 
     .page.brawl-play .miao-learn-card.show {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateY(0) scale(1) rotate(-1deg);
     }
 
     .miao-learn-card small {
@@ -51,8 +53,8 @@ function ensureStyle() {
     .miao-learn-card strong {
       display: block;
       margin-top: 8px;
-      font-size: 24px;
-      line-height: 1;
+      font-size: 28px;
+      line-height: .95;
     }
 
     .miao-learn-card p {
@@ -60,8 +62,22 @@ function ensureStyle() {
       color: rgba(23,51,74,.78);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 850;
       line-height: 1.38;
+    }
+
+    .miao-battle-skill {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 2px solid rgba(23,51,74,.18);
+      border-radius: 13px;
+      background: rgba(255,255,255,.58);
+      color: #17334a;
+      font-size: 12px;
+      font-weight: 1000;
     }
 
     .miao-goals {
@@ -71,8 +87,10 @@ function ensureStyle() {
       width: min(330px, calc(100vw - 36px));
       padding: 14px 16px;
       border: 4px solid #17334a;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(234,251,214,.92));
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at 16% 16%, rgba(255,255,255,.98), transparent 40%),
+        linear-gradient(180deg, rgba(255,255,255,.94), rgba(234,251,214,.92));
       box-shadow: 0 7px 0 rgba(23,51,74,.2), 0 18px 34px rgba(126,217,87,.16);
     }
 
@@ -88,7 +106,7 @@ function ensureStyle() {
       color: rgba(23,51,74,.78);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 850;
       line-height: 1.45;
     }
 
@@ -105,7 +123,7 @@ function ensureStyle() {
     .miao-result-learning span {
       padding: 8px 10px;
       border-radius: 12px;
-      background: rgba(255,255,255,.48);
+      background: rgba(255,255,255,.62);
       border: 2px solid rgba(23,51,74,.16);
     }
 
@@ -134,12 +152,13 @@ export function mountMusicLearningOverlay() {
   root.className = "miao-learn-root";
   root.innerHTML = `
     <section class="miao-learn-card" data-learn-card>
-      <small data-learn-kicker>音乐知识</small>
-      <strong data-learn-title>C = Do</strong>
-      <p data-learn-copy>按下音符时，这里会告诉你它在旋律里的作用。</p>
+      <small data-learn-kicker>声音记忆</small>
+      <strong data-learn-title>Do = 家</strong>
+      <p data-learn-copy>命中音符时，这里会帮你记住它的听感。</p>
+      <div class="miao-battle-skill" data-learn-skill>战斗技能：稳定护盾</div>
     </section>
     <section class="miao-goals">
-      <h3>本关真正要学会</h3>
+      <h3>本关记忆目标</h3>
       <ol>${LEARNING_GOALS.map((goal) => `<li>${goal}</li>`).join("")}</ol>
     </section>
   `;
@@ -149,6 +168,7 @@ export function mountMusicLearningOverlay() {
   const kicker = root.querySelector("[data-learn-kicker]");
   const title = root.querySelector("[data-learn-title]");
   const copy = root.querySelector("[data-learn-copy]");
+  const skill = root.querySelector("[data-learn-skill]");
   let hideTimer = 0;
 
   const showNote = (lane, result = "good") => {
@@ -158,6 +178,7 @@ export function mountMusicLearningOverlay() {
     kicker.textContent = `${note} = ${info.solfege} · ${result.toUpperCase()}`;
     title.textContent = info.role;
     copy.textContent = `${info.relation} ${info.tip}`;
+    skill.textContent = `战斗技能：${info.battle}`;
     card.classList.add("show");
     window.clearTimeout(hideTimer);
     hideTimer = window.setTimeout(() => card.classList.remove("show"), 2600);
@@ -174,11 +195,7 @@ export function mountMusicLearningOverlay() {
     if (!resultCard || resultCard.querySelector(".miao-result-learning")) return;
     const block = document.createElement("div");
     block.className = "miao-result-learning";
-    block.innerHTML = `
-      <span>本局学习：C 是 Do，旋律里的稳定落点。</span>
-      <span>本局学习：D 向前，E 明亮，G 有起飞感。</span>
-      <span>下一步目标：不要只看按钮颜色，开始记住每个音的听感。</span>
-    `;
+    block.innerHTML = RESULT_MEMORY.map((item) => `<span>${item}</span>`).join("");
     resultCard.appendChild(block);
   };
 
