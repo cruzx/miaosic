@@ -485,7 +485,7 @@ function ensureStyle() {
     }
 
     .miao-event::before {
-      content: "💎";
+      content: "🎵";
       position: absolute;
       left: 16px;
       top: 50%;
@@ -670,57 +670,7 @@ function ensureStyle() {
     }
 
     .miao-arena-controls {
-      position: absolute;
-      inset: auto 0 calc(env(safe-area-inset-bottom, 0px) + 18px) 0;
-      z-index: 4;
-      pointer-events: none;
-    }
-
-    .miao-stick {
-      position: absolute;
-      left: 38px;
-      bottom: 0;
-      width: 112px;
-      height: 112px;
-      border-radius: 50%;
-      border: 4px solid rgba(255,255,255,.34);
-      background: rgba(8,16,35,.24);
-      pointer-events: auto;
-    }
-
-    .miao-stick::before {
-      content: "";
-      position: absolute;
-      inset: 28px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.34);
-      border: 3px solid rgba(0,0,0,.35);
-    }
-
-    .miao-skill {
-      position: absolute;
-      right: 36px;
-      bottom: 0;
-      width: 96px;
-      height: 96px;
-      display: grid;
-      place-items: center;
-      border: 5px solid var(--miao-stroke);
-      border-radius: 50%;
-      background: linear-gradient(180deg, #ffe13b, #ff9c00);
-      box-shadow: 0 6px 0 #703800;
-      color: #fff;
-      font-size: 42px;
-      pointer-events: auto;
-    }
-
-    .miao-skill.secondary {
-      right: 150px;
-      bottom: 18px;
-      width: 76px;
-      height: 76px;
-      background: linear-gradient(180deg, #b63cff, #5d20d8);
-      font-size: 34px;
+      display: none;
     }
 
     .miao-exit {
@@ -822,9 +772,6 @@ function ensureStyle() {
       .miao-timer { min-width: 72px; height: 42px; font-size: 20px; }
       .miao-wall { width: 54px; height: 54px; }
       .miao-fighter { width: 64px; height: 64px; }
-      .miao-stick { width: 92px; height: 92px; left: 20px; }
-      .miao-skill { width: 82px; height: 82px; right: 20px; }
-      .miao-skill.secondary { right: 116px; width: 62px; height: 62px; }
     }
   `;
   document.head.appendChild(style);
@@ -835,7 +782,7 @@ function createLobbyMarkup() {
   root.className = "miao-brawl-root";
   root.innerHTML = `
     <section class="miao-lobby-root">
-      <div class="miao-logo">MIAOSIC<span>音乐竞技场</span></div>
+      <div class="miao-logo">MIAOSIC<span>节奏竞技场</span></div>
       <div class="miao-top-currencies">
         <div class="miao-currency"><i>⚡</i><b>120/120</b></div>
         <div class="miao-currency"><i>🪙</i><b>23980</b></div>
@@ -845,7 +792,7 @@ function createLobbyMarkup() {
       <nav class="miao-side left">
         <button class="miao-side-btn" type="button"><i>🛒</i>商店<span class="miao-badge">新</span></button>
         <button class="miao-side-btn" type="button"><i>🎭</i>英雄<span class="miao-badge">12</span></button>
-        <button class="miao-side-btn" type="button"><i>🎵</i>音符之路<span class="miao-badge">38</span></button>
+        <button class="miao-side-btn" type="button"><i>🎵</i>谱面之路<span class="miao-badge">38</span></button>
         <button class="miao-side-btn" type="button"><i>☠️</i>活动</button>
       </nav>
       <nav class="miao-side right">
@@ -866,10 +813,10 @@ function createLobbyMarkup() {
         <button class="miao-plus-friend" type="button">+</button>
       </section>
       <section class="miao-bottom">
-        <button class="miao-chest" data-icon="🎹" type="button"><strong>试听宝箱</strong><span>12 / 100</span></button>
-        <button class="miao-chest" data-icon="📻" type="button"><strong>音乐宝箱</strong><span>80 / 100</span></button>
-        <button class="miao-event" type="button"><strong>宝石争霸</strong><span>和弦广场 · 活动刷新 2小时36分</span></button>
-        <button class="miao-play" type="button" data-brawl-play>对战</button>
+        <button class="miao-chest" data-icon="🎹" type="button"><strong>节拍宝箱</strong><span>12 / 100</span></button>
+        <button class="miao-chest" data-icon="📻" type="button"><strong>谱面宝箱</strong><span>80 / 100</span></button>
+        <button class="miao-event" type="button"><strong>节奏争霸</strong><span>C / D / E / G 四轨节拍战</span></button>
+        <button class="miao-play" type="button" data-brawl-play>开演</button>
       </section>
     </section>
     <section class="miao-arena-root" aria-label="Music arena preview">
@@ -886,11 +833,6 @@ function createLobbyMarkup() {
         <div class="miao-team-bar"></div>
         <div class="miao-timer">2:15</div>
         <div class="miao-team-bar red"></div>
-      </div>
-      <div class="miao-arena-controls">
-        <div class="miao-stick"></div>
-        <button class="miao-skill secondary" type="button">♪</button>
-        <button class="miao-skill" type="button">☠</button>
       </div>
       <button class="miao-exit" type="button" data-brawl-exit>退出</button>
     </section>
@@ -909,7 +851,7 @@ export function mountBrawlRestyle(runtime) {
   const sync = () => {
     const stage = STAGES[runtime.state.stage] || STAGES.note3;
     const event = root.querySelector(".miao-event span");
-    if (event) event.textContent = `${stage.prompt} · ${stage.rewardName} · ${stage.badge}`;
+    if (event) event.textContent = `四轨节奏 · ${stage.rewardName} · ${stage.badge}`;
   };
 
   root.addEventListener("click", (event) => {
