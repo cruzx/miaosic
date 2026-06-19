@@ -6,6 +6,7 @@ import { mountVisionUpgrade } from "./ui/vision-upgrade.js";
 import { mountDailyQuests } from "./ui/daily-quests.js";
 import { mountBrawlRestyle } from "./ui/brawl-restyle.js";
 import { mountBrawlCleanup } from "./ui/brawl-cleanup.js";
+import { mountRhythmBattle } from "./ui/rhythm-battle.js";
 
 const runtime = createGameScene({ THREE });
 setupNativeBridge(runtime);
@@ -14,3 +15,4 @@ mountVisionUpgrade(runtime);
 mountDailyQuests(runtime);
 mountBrawlRestyle(runtime);
 mountBrawlCleanup();
+mountRhythmBattle();
