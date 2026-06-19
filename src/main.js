@@ -6,6 +6,8 @@ import { mountVisionUpgrade } from "./ui/vision-upgrade.js";
 import { mountDailyQuests } from "./ui/daily-quests.js";
 import { mountBrawlRestyle } from "./ui/brawl-restyle.js";
 import { mountBrawlCleanup } from "./ui/brawl-cleanup.js";
+import { mountFreshLearningTheme } from "./ui/fresh-learning-theme.js";
+import { mountMusicLearningOverlay } from "./ui/music-learning-overlay.js";
 import { mountRhythmBattle } from "./ui/rhythm-battle.js";
 import { mountRhythmArena3D } from "./scene/rhythm-arena-3d.js";
 
@@ -16,5 +18,7 @@ mountVisionUpgrade(runtime);
 mountDailyQuests(runtime);
 mountBrawlRestyle(runtime);
 mountBrawlCleanup();
+mountFreshLearningTheme();
 mountRhythmArena3D();
 mountRhythmBattle();
+mountMusicLearningOverlay();
