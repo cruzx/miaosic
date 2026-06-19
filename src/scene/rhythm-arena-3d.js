@@ -16,17 +16,8 @@ function ensureStyle() {
       transform: scale(1.02);
       transition: opacity 180ms ease, transform 220ms ease;
     }
-
-    .page.brawl-play .miao-rhythm-3d {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .miao-rhythm-3d canvas {
-      width: 100% !important;
-      height: 100% !important;
-      display: block;
-    }
+    .page.brawl-play .miao-rhythm-3d { opacity: 1; transform: scale(1); }
+    .miao-rhythm-3d canvas { width: 100% !important; height: 100% !important; display: block; }
   `;
   document.head.appendChild(style);
 }
@@ -34,8 +25,8 @@ function ensureStyle() {
 function makeMat(color, options = {}) {
   return new THREE.MeshStandardMaterial({
     color,
-    roughness: options.roughness ?? 0.58,
-    metalness: options.metalness ?? 0.08,
+    roughness: options.roughness ?? 0.52,
+    metalness: options.metalness ?? 0.03,
     emissive: options.emissive ?? 0x000000,
     emissiveIntensity: options.emissiveIntensity ?? 0,
     transparent: options.transparent ?? false,
@@ -43,12 +34,10 @@ function makeMat(color, options = {}) {
   });
 }
 
-function makeBox(width, height, depth, color, radius = 0) {
-  const geometry = new THREE.BoxGeometry(width, height, depth, 2, 1, 2);
-  const mesh = new THREE.Mesh(geometry, makeMat(color));
+function makeBox(width, height, depth, color) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth, 2, 1, 2), makeMat(color));
   mesh.castShadow = true;
   mesh.receiveShadow = true;
-  mesh.userData.radius = radius;
   return mesh;
 }
 
@@ -61,33 +50,31 @@ function makeDisc(radius, color, opacity = 1) {
   return mesh;
 }
 
-function createFighter({ color, x, z, name }) {
+function createFighter({ color, x, z }) {
   const group = new THREE.Group();
   group.position.set(x, 0, z);
-  group.userData.name = name;
 
-  const shadow = makeDisc(38, 0x051018, 0.32);
+  const shadow = makeDisc(38, 0x4aa6b8, 0.18);
   shadow.position.y = 2;
   shadow.scale.set(1.2, 0.62, 1);
   group.add(shadow);
 
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(24, 34, 8, 18), makeMat(color, { roughness: 0.5 }));
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(24, 34, 8, 18), makeMat(color, { roughness: 0.42 }));
   body.position.y = 42;
   body.castShadow = true;
   group.add(body);
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(28, 24, 18), makeMat(color, { roughness: 0.48 }));
+  const head = new THREE.Mesh(new THREE.SphereGeometry(28, 24, 18), makeMat(color, { roughness: 0.42 }));
   head.position.y = 82;
   head.scale.set(1.05, 0.92, 1);
   head.castShadow = true;
   group.add(head);
 
-  const face = new THREE.Mesh(new THREE.BoxGeometry(22, 6, 6), makeMat(0x070914));
+  const face = new THREE.Mesh(new THREE.BoxGeometry(22, 6, 6), makeMat(0x17334a));
   face.position.set(0, 83, 24);
-  face.castShadow = false;
   group.add(face);
 
-  const weapon = new THREE.Mesh(new THREE.BoxGeometry(78, 12, 13), makeMat(0x8f35ff, { emissive: 0x3c00a0, emissiveIntensity: 0.25 }));
+  const weapon = new THREE.Mesh(new THREE.BoxGeometry(78, 12, 13), makeMat(0xb78cff, { emissive: 0x8a6cff, emissiveIntensity: 0.16 }));
   weapon.position.set(18, 50, 30);
   weapon.rotation.set(0, 0.2, -0.48);
   weapon.castShadow = true;
@@ -95,7 +82,7 @@ function createFighter({ color, x, z, name }) {
 
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(48, 3.5, 8, 64),
-    new THREE.MeshBasicMaterial({ color: 0x21e35f, transparent: true, opacity: 0.82 })
+    new THREE.MeshBasicMaterial({ color: 0x7ed957, transparent: true, opacity: 0.72 })
   );
   ring.rotation.x = Math.PI / 2;
   ring.position.y = 6;
@@ -111,20 +98,21 @@ function createLane(index, color) {
   const lane = new THREE.Mesh(
     new THREE.BoxGeometry(72, 4, 720),
     new THREE.MeshStandardMaterial({
-      color: 0x141f38,
-      roughness: 0.62,
-      metalness: 0.15,
+      color: 0xffffff,
+      roughness: 0.38,
+      metalness: 0.02,
       emissive: color,
-      emissiveIntensity: 0.08,
+      emissiveIntensity: 0.1,
       transparent: true,
-      opacity: 0.72
+      opacity: 0.78
     })
   );
   lane.position.set(x, 5, 30);
   lane.receiveShadow = true;
   group.add(lane);
 
-  const sideLeft = new THREE.Mesh(new THREE.BoxGeometry(4, 8, 720), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.45 }));
+  const railMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.42 });
+  const sideLeft = new THREE.Mesh(new THREE.BoxGeometry(4, 8, 720), railMat);
   sideLeft.position.set(x - 38, 11, 30);
   group.add(sideLeft);
 
@@ -134,14 +122,14 @@ function createLane(index, color) {
 
   const pad = new THREE.Mesh(
     new THREE.CylinderGeometry(36, 42, 14, 32),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0.2, emissive: color, emissiveIntensity: 0.18 })
+    new THREE.MeshStandardMaterial({ color, roughness: 0.32, metalness: 0.03, emissive: color, emissiveIntensity: 0.16 })
   );
   pad.position.set(x, 16, 260);
   pad.castShadow = true;
   pad.receiveShadow = true;
   group.add(pad);
 
-  const padRing = new THREE.Mesh(new THREE.TorusGeometry(44, 4, 8, 64), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.82 }));
+  const padRing = new THREE.Mesh(new THREE.TorusGeometry(44, 4, 8, 64), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.72 }));
   padRing.rotation.x = Math.PI / 2;
   padRing.position.set(x, 25, 260);
   group.add(padRing);
@@ -154,12 +142,12 @@ function createFlyingNote(lane, color, seed) {
   const group = new THREE.Group();
   const core = new THREE.Mesh(
     new THREE.IcosahedronGeometry(22, 1),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.28, metalness: 0.12, emissive: color, emissiveIntensity: 0.35 })
+    new THREE.MeshStandardMaterial({ color, roughness: 0.22, metalness: 0.04, emissive: color, emissiveIntensity: 0.22 })
   );
   core.castShadow = true;
   group.add(core);
 
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(30, 3.4, 8, 48), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.72 }));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(30, 3.4, 8, 48), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.64 }));
   ring.rotation.x = Math.PI / 2;
   group.add(ring);
 
@@ -170,7 +158,7 @@ function createFlyingNote(lane, color, seed) {
 function makeShockwave(color) {
   const wave = new THREE.Mesh(
     new THREE.TorusGeometry(32, 4, 8, 96),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.88, depthWrite: false })
   );
   wave.rotation.x = Math.PI / 2;
   wave.userData.life = 1;
@@ -188,7 +176,7 @@ export function mountRhythmArena3D() {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0x000000, 0);
+  renderer.setClearColor(0xffffff, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -199,9 +187,9 @@ export function mountRhythmArena3D() {
   camera.position.set(0, 560, 650);
   camera.lookAt(0, 0, 60);
 
-  scene.add(new THREE.HemisphereLight(0xaedcff, 0x2a1020, 2.2));
-  const key = new THREE.DirectionalLight(0xffffff, 3.2);
-  key.position.set(-240, 520, 360);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xbbe7c5, 2.8));
+  const key = new THREE.DirectionalLight(0xffffff, 3.6);
+  key.position.set(-240, 560, 360);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
   key.shadow.camera.left = -480;
@@ -215,13 +203,21 @@ export function mountRhythmArena3D() {
 
   const floor = new THREE.Mesh(
     new THREE.BoxGeometry(920, 24, 820),
-    makeMat(0x7a4228, { roughness: 0.7 })
+    makeMat(0xdff7ff, { roughness: 0.58 })
   );
   floor.position.y = -12;
   floor.receiveShadow = true;
   arena.add(floor);
 
-  const gridMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.12 });
+  const lawn = new THREE.Mesh(
+    new THREE.BoxGeometry(980, 10, 880),
+    makeMat(0xeafbd6, { roughness: 0.72 })
+  );
+  lawn.position.y = -24;
+  lawn.receiveShadow = true;
+  arena.add(lawn);
+
+  const gridMat = new THREE.MeshBasicMaterial({ color: 0x49b8ff, transparent: true, opacity: 0.16 });
   for (let i = -5; i <= 5; i += 1) {
     const lineX = new THREE.Mesh(new THREE.BoxGeometry(4, 2, 820), gridMat);
     lineX.position.set(i * 84, 2, 0);
@@ -231,7 +227,7 @@ export function mountRhythmArena3D() {
     arena.add(lineZ);
   }
 
-  const laneColors = [0x1fb6ff, 0x9b35ff, 0x20dc5b, 0xffd21f];
+  const laneColors = [0x49b8ff, 0x7ed957, 0xffd447, 0xb78cff];
   const lanes = laneColors.map((color, index) => {
     const lane = createLane(index, color);
     arena.add(lane);
@@ -243,7 +239,7 @@ export function mountRhythmArena3D() {
     [-290, 80], [290, 80], [-72, -40], [72, -40],
     [-370, 210], [370, 210]
   ].map(([x, z], index) => {
-    const wall = makeBox(66, 62, 66, index % 2 ? 0xffbf42 : 0xf09528);
+    const wall = makeBox(66, 62, 66, index % 2 ? 0xffffff : 0xfff0a6);
     wall.position.set(x, 26, z);
     arena.add(wall);
     return wall;
@@ -254,7 +250,7 @@ export function mountRhythmArena3D() {
   ].map(([x, z]) => {
     const bush = new THREE.Mesh(
       new THREE.DodecahedronGeometry(42, 0),
-      makeMat(0xff5d72, { roughness: 0.84 })
+      makeMat(0x7ed957, { roughness: 0.84 })
     );
     bush.position.set(x, 32, z);
     bush.scale.set(1.2, 0.68, 1.05);
@@ -265,17 +261,25 @@ export function mountRhythmArena3D() {
 
   const centerPool = new THREE.Mesh(
     new THREE.CylinderGeometry(78, 92, 10, 48),
-    makeMat(0x12c8b6, { roughness: 0.32, metalness: 0.1, emissive: 0x12c8b6, emissiveIntensity: 0.35 })
+    makeMat(0x49b8ff, { roughness: 0.28, metalness: 0.02, emissive: 0x49b8ff, emissiveIntensity: 0.18 })
   );
   centerPool.position.set(0, 8, 24);
   centerPool.receiveShadow = true;
   arena.add(centerPool);
 
+  const noteSign = new THREE.Mesh(
+    new THREE.TorusGeometry(112, 4, 8, 96),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.76 })
+  );
+  noteSign.rotation.x = Math.PI / 2;
+  noteSign.position.set(0, 18, 24);
+  arena.add(noteSign);
+
   const fighters = [
-    createFighter({ color: 0xff8b1f, x: 0, z: 154, name: "RockCat" }),
-    createFighter({ color: 0x8fd3ff, x: -250, z: -60, name: "PianoMew" }),
-    createFighter({ color: 0xffffff, x: 230, z: -84, name: "DJPanda" }),
-    createFighter({ color: 0x9b35ff, x: 330, z: 120, name: "Violin" })
+    createFighter({ color: 0xffb45c, x: 0, z: 154 }),
+    createFighter({ color: 0xbfefff, x: -250, z: -60 }),
+    createFighter({ color: 0xffffff, x: 230, z: -84 }),
+    createFighter({ color: 0xb78cff, x: 330, z: 120 })
   ];
   fighters.forEach((fighter) => arena.add(fighter));
 
@@ -289,19 +293,17 @@ export function mountRhythmArena3D() {
   }
 
   const shockwaves = [];
-  let lastJudgeAt = 0;
   let shake = 0;
 
   const onJudge = (event) => {
     const { result = "good", lane = 1 } = event.detail || {};
     const laneIndex = Math.max(0, Math.min(3, Number(lane) || 0));
-    const color = result === "miss" || result === "bad" ? 0xff314b : result === "super" ? 0xffd21f : laneColors[laneIndex];
+    const color = result === "miss" || result === "bad" ? 0xff6d7a : result === "super" ? 0xffd447 : laneColors[laneIndex];
     const wave = makeShockwave(color);
     wave.position.set(lanes[laneIndex].userData.x, 29, 260);
     arena.add(wave);
     shockwaves.push(wave);
-    shake = result === "perfect" ? 1.6 : result === "super" ? 4.8 : 0.8;
-    lastJudgeAt = performance.now();
+    shake = result === "perfect" ? 1.2 : result === "super" ? 3.2 : 0.55;
 
     const pad = lanes[laneIndex].userData.pad;
     pad.scale.set(1.18, 0.82, 1.18);
@@ -325,9 +327,10 @@ export function mountRhythmArena3D() {
     const dt = Math.min(0.05, clock.getDelta());
     const active = page.classList.contains("brawl-play");
 
-    arena.rotation.y = Math.sin(t * 0.28) * 0.025;
+    arena.rotation.y = Math.sin(t * 0.24) * 0.018;
     centerPool.rotation.y += dt * 0.65;
     centerPool.scale.setScalar(1 + Math.sin(t * 2.4) * 0.035);
+    noteSign.rotation.z += dt * 0.9;
 
     fighters.forEach((fighter, index) => {
       fighter.position.y = Math.sin(t * 3.2 + index) * 3;
