@@ -4,9 +4,11 @@ import { setupNativeBridge } from "./native/capacitor-bridge.js";
 import { mountGameShell } from "./ui/game-shell.js";
 import { mountVisionUpgrade } from "./ui/vision-upgrade.js";
 import { mountDailyQuests } from "./ui/daily-quests.js";
+import { mountBrawlRestyle } from "./ui/brawl-restyle.js";
 
 const runtime = createGameScene({ THREE });
 setupNativeBridge(runtime);
 mountGameShell(runtime);
 mountVisionUpgrade(runtime);
 mountDailyQuests(runtime);
+mountBrawlRestyle(runtime);
