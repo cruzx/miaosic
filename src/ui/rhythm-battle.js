@@ -3,6 +3,10 @@ import { createRhythmEngine } from "../systems/rhythm-engine.js";
 
 const STYLE_ID = "miaosic-rhythm-battle-style";
 
+function dispatchRhythmEvent(name, detail) {
+  window.dispatchEvent(new CustomEvent(`miaosic:rhythm-${name}`, { detail }));
+}
+
 function ensureStyle() {
   if (document.getElementById(STYLE_ID)) return;
   const style = document.createElement("style");
@@ -20,9 +24,7 @@ function ensureStyle() {
       user-select: none;
     }
 
-    .page.brawl-play .miao-rhythm-root {
-      display: block;
-    }
+    .page.brawl-play .miao-rhythm-root { display: block; }
 
     .miao-rhythm-hud {
       position: absolute;
@@ -54,11 +56,7 @@ function ensureStyle() {
       font-family: "Arial Black", system-ui;
     }
 
-    .miao-rhythm-stat strong {
-      display: block;
-      font-size: 24px;
-      line-height: 1;
-    }
+    .miao-rhythm-stat strong { display: block; font-size: 24px; line-height: 1; }
 
     .miao-rhythm-judge {
       min-width: 180px;
@@ -75,21 +73,9 @@ function ensureStyle() {
       transition: opacity 80ms ease, transform 120ms cubic-bezier(.2, 1.7, .3, 1);
     }
 
-    .miao-rhythm-judge.show {
-      opacity: 1;
-      transform: rotate(-2deg) scale(1);
-    }
-
-    .miao-rhythm-judge.miss,
-    .miao-rhythm-judge.bad {
-      background: linear-gradient(180deg, #ff6270, #b8142c);
-      box-shadow: 0 6px 0 #5d0614;
-    }
-
-    .miao-rhythm-judge.super {
-      background: linear-gradient(180deg, #c873ff, #7133ff);
-      box-shadow: 0 6px 0 #2d1170;
-    }
+    .miao-rhythm-judge.show { opacity: 1; transform: rotate(-2deg) scale(1); }
+    .miao-rhythm-judge.miss, .miao-rhythm-judge.bad { background: linear-gradient(180deg, #ff6270, #b8142c); box-shadow: 0 6px 0 #5d0614; }
+    .miao-rhythm-judge.super { background: linear-gradient(180deg, #c873ff, #7133ff); box-shadow: 0 6px 0 #2d1170; }
 
     .miao-rhythm-track {
       position: absolute;
@@ -150,16 +136,8 @@ function ensureStyle() {
       transition: transform 70ms ease, opacity 90ms ease;
     }
 
-    .miao-rhythm-note.hold {
-      border-radius: 18px;
-      height: 86px;
-    }
-
-    .miao-rhythm-note.hit,
-    .miao-rhythm-note.missed {
-      opacity: 0;
-      transform: translate(-50%, 50%) scale(1.45);
-    }
+    .miao-rhythm-note.hold { border-radius: 18px; height: 86px; }
+    .miao-rhythm-note.hit, .miao-rhythm-note.missed { opacity: 0; transform: translate(-50%, 50%) scale(1.45); }
 
     .miao-rhythm-buttons {
       position: absolute;
@@ -184,12 +162,7 @@ function ensureStyle() {
       pointer-events: auto;
     }
 
-    .miao-rhythm-btn:active,
-    .miao-rhythm-btn.pressed {
-      transform: translateY(5px) scale(.98);
-      box-shadow: 0 2px 0 rgba(0,0,0,.52);
-      filter: brightness(1.18);
-    }
+    .miao-rhythm-btn:active, .miao-rhythm-btn.pressed { transform: translateY(5px) scale(.98); box-shadow: 0 2px 0 rgba(0,0,0,.52); filter: brightness(1.18); }
 
     .miao-rhythm-super {
       position: absolute;
@@ -202,23 +175,15 @@ function ensureStyle() {
       place-items: center;
       border: 6px solid #070914;
       border-radius: 50%;
-      background:
-        conic-gradient(#ffd21f calc(var(--energy, 0) * 1%), #4b526f 0),
-        linear-gradient(180deg, #ffe13b, #ff9c00);
+      background: conic-gradient(#ffd21f calc(var(--energy, 0) * 1%), #4b526f 0), linear-gradient(180deg, #ffe13b, #ff9c00);
       box-shadow: 0 7px 0 #743800, 0 0 0 8px rgba(255,255,255,.08);
       color: #fff;
       font-size: 42px;
       pointer-events: auto;
     }
 
-    .miao-rhythm-super.ready {
-      animation: miaoSuperPulse 720ms ease-in-out infinite;
-    }
-
-    @keyframes miaoSuperPulse {
-      0%, 100% { transform: scale(1); filter: brightness(1); }
-      50% { transform: scale(1.08); filter: brightness(1.25); }
-    }
+    .miao-rhythm-super.ready { animation: miaoSuperPulse 720ms ease-in-out infinite; }
+    @keyframes miaoSuperPulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.08); filter: brightness(1.25); } }
 
     .miao-rhythm-start {
       position: absolute;
@@ -236,136 +201,30 @@ function ensureStyle() {
       pointer-events: auto;
     }
 
-    .miao-rhythm-start strong {
-      display: block;
-      font-size: 32px;
-      line-height: 1;
-    }
+    .miao-rhythm-start strong { display: block; font-size: 32px; line-height: 1; }
+    .miao-rhythm-start p { margin: 10px 0 16px; color: #cfe4ff; font-family: "Arial Black", system-ui; font-size: 13px; line-height: 1.45; text-shadow: none; }
+    .miao-rhythm-start button { width: 100%; height: 66px; border: 5px solid #070914; border-radius: 14px; background: linear-gradient(180deg, #ffe33b, #ffb000); color: #fff; box-shadow: 0 7px 0 #7a3b00; font-size: 32px; }
+    .miao-rhythm-start.hidden { display: none; }
 
-    .miao-rhythm-start p {
-      margin: 10px 0 16px;
-      color: #cfe4ff;
-      font-family: "Arial Black", system-ui;
-      font-size: 13px;
-      line-height: 1.45;
-      text-shadow: none;
-    }
-
-    .miao-rhythm-start button {
-      width: 100%;
-      height: 66px;
-      border: 5px solid #070914;
-      border-radius: 14px;
-      background: linear-gradient(180deg, #ffe33b, #ffb000);
-      color: #fff;
-      box-shadow: 0 7px 0 #7a3b00;
-      font-size: 32px;
-    }
-
-    .miao-rhythm-start.hidden {
-      display: none;
-    }
-
-    .miao-rhythm-result {
-      position: absolute;
-      inset: 0;
-      z-index: 22;
-      display: none;
-      place-items: center;
-      background: linear-gradient(135deg, rgba(0,0,0,.86), rgba(0,43,122,.82));
-      pointer-events: auto;
-    }
-
-    .miao-rhythm-result.show {
-      display: grid;
-    }
-
-    .miao-rhythm-result-card {
-      width: min(520px, calc(100vw - 38px));
-      padding: 24px;
-      border: 5px solid #070914;
-      border-radius: 18px;
-      background: linear-gradient(180deg, #118aff, #0736a5);
-      box-shadow: 0 10px 0 #050711;
-      transform: rotate(-1deg);
-    }
-
-    .miao-rhythm-result-card h2 {
-      margin: 0 0 12px;
-      font-size: 52px;
-      line-height: .9;
-    }
-
-    .miao-rhythm-result-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin: 16px 0;
-    }
-
-    .miao-rhythm-result-grid div {
-      padding: 12px;
-      border: 3px solid #070914;
-      border-radius: 10px;
-      background: rgba(255,255,255,.12);
-    }
-
-    .miao-rhythm-result-grid span {
-      display: block;
-      color: #cfe4ff;
-      font-family: "Arial Black", system-ui;
-      font-size: 12px;
-      text-shadow: none;
-    }
-
-    .miao-rhythm-result-grid strong {
-      display: block;
-      font-size: 30px;
-    }
-
-    .miao-rhythm-result-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .miao-rhythm-result-actions button {
-      height: 58px;
-      border: 4px solid #070914;
-      border-radius: 12px;
-      background: linear-gradient(180deg, #ffe33b, #ffb000);
-      color: #fff;
-      box-shadow: 0 6px 0 #7a3b00;
-      font-size: 24px;
-    }
+    .miao-rhythm-result { position: absolute; inset: 0; z-index: 22; display: none; place-items: center; background: linear-gradient(135deg, rgba(0,0,0,.86), rgba(0,43,122,.82)); pointer-events: auto; }
+    .miao-rhythm-result.show { display: grid; }
+    .miao-rhythm-result-card { width: min(520px, calc(100vw - 38px)); padding: 24px; border: 5px solid #070914; border-radius: 18px; background: linear-gradient(180deg, #118aff, #0736a5); box-shadow: 0 10px 0 #050711; transform: rotate(-1deg); }
+    .miao-rhythm-result-card h2 { margin: 0 0 12px; font-size: 52px; line-height: .9; }
+    .miao-rhythm-result-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 16px 0; }
+    .miao-rhythm-result-grid div { padding: 12px; border: 3px solid #070914; border-radius: 10px; background: rgba(255,255,255,.12); }
+    .miao-rhythm-result-grid span { display: block; color: #cfe4ff; font-family: "Arial Black", system-ui; font-size: 12px; text-shadow: none; }
+    .miao-rhythm-result-grid strong { display: block; font-size: 30px; }
+    .miao-rhythm-result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .miao-rhythm-result-actions button { height: 58px; border: 4px solid #070914; border-radius: 12px; background: linear-gradient(180deg, #ffe33b, #ffb000); color: #fff; box-shadow: 0 6px 0 #7a3b00; font-size: 24px; }
 
     @media (max-width: 760px), (orientation: portrait) {
-      .miao-rhythm-hud {
-        top: calc(env(safe-area-inset-top, 0px) + 54px);
-        grid-template-columns: 1fr 1fr;
-      }
-      .miao-rhythm-judge {
-        grid-column: 1 / -1;
-        order: 3;
-        min-width: 0;
-        min-height: 44px;
-        font-size: 24px;
-      }
-      .miao-rhythm-track {
-        width: calc(100vw - 22px);
-        height: 34vh;
-        bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-      }
+      .miao-rhythm-hud { top: calc(env(safe-area-inset-top, 0px) + 54px); grid-template-columns: 1fr 1fr; }
+      .miao-rhythm-judge { grid-column: 1 / -1; order: 3; min-width: 0; min-height: 44px; font-size: 24px; }
+      .miao-rhythm-track { width: calc(100vw - 22px); height: 34vh; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); }
       .miao-rhythm-buttons { gap: 7px; }
       .miao-rhythm-btn { height: 66px; font-size: 20px; }
       .miao-rhythm-note { width: 48px; height: 48px; font-size: 19px; }
-      .miao-rhythm-super {
-        right: 18px;
-        bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
-        width: 82px;
-        height: 82px;
-        font-size: 34px;
-      }
+      .miao-rhythm-super { right: 18px; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); width: 82px; height: 82px; font-size: 34px; }
     }
   `;
   document.head.appendChild(style);
@@ -413,14 +272,7 @@ function createRoot(chart) {
 }
 
 function resultLabel(result) {
-  return {
-    perfect: "PERFECT!",
-    great: "GREAT",
-    good: "GOOD",
-    bad: "BAD",
-    miss: "MISS",
-    super: "SUPER!"
-  }[result] || result.toUpperCase();
+  return { perfect: "PERFECT!", great: "GREAT", good: "GOOD", bad: "BAD", miss: "MISS", super: "SUPER!" }[result] || result.toUpperCase();
 }
 
 export function mountRhythmBattle() {
@@ -455,6 +307,7 @@ export function mountRhythmBattle() {
       refs.combo.textContent = state.combo;
       refs.super.style.setProperty("--energy", state.energy);
       refs.super.classList.toggle("ready", state.energy >= 100);
+      dispatchRhythmEvent("state", { score: state.score, combo: state.combo, energy: state.energy, hp: state.hp, elapsed: state.elapsed });
 
       const visible = state.notes.filter((note) => !note.hit && !note.missed && note.time - state.elapsed < 2.6 && note.time - state.elapsed > -0.36);
       refs.notes.innerHTML = visible.map((note) => {
@@ -464,11 +317,12 @@ export function mountRhythmBattle() {
         return `<div class="miao-rhythm-note ${note.type}" style="--lane:${note.lane};--y:${y};--note-color:${color}">${chart.lanes[note.lane]}</div>`;
       }).join("");
     },
-    onJudge: ({ result }) => {
+    onJudge: ({ result, note, score, combo, energy, hp }) => {
       window.clearTimeout(judgeTimer);
       refs.judge.textContent = resultLabel(result);
       refs.judge.className = `miao-rhythm-judge show ${result}`;
       judgeTimer = window.setTimeout(() => refs.judge.classList.remove("show"), 360);
+      dispatchRhythmEvent("judge", { result, lane: note?.lane ?? 1, score, combo, energy, hp });
     },
     onFinish: (state) => {
       refs.resultTitle.textContent = state.hp > 0 ? "VICTORY" : "DEFEAT";
@@ -476,6 +330,7 @@ export function mountRhythmBattle() {
       refs.resultCombo.textContent = state.maxCombo;
       refs.resultHp.textContent = Math.round(state.hp);
       refs.result.classList.add("show");
+      dispatchRhythmEvent("finish", { score: state.score, combo: state.maxCombo, hp: state.hp });
     }
   });
 
@@ -493,16 +348,19 @@ export function mountRhythmBattle() {
     if (event.target.closest("[data-rhythm-start-btn]")) {
       refs.start.classList.add("hidden");
       refs.result.classList.remove("show");
+      dispatchRhythmEvent("start", { chart: chart.id });
       engine.start();
     }
     if (event.target.closest("[data-rhythm-retry]")) {
       refs.result.classList.remove("show");
+      dispatchRhythmEvent("start", { chart: chart.id });
       engine.start();
     }
     if (event.target.closest("[data-rhythm-close]")) {
       refs.result.classList.remove("show");
       refs.start.classList.remove("hidden");
       engine.stop();
+      dispatchRhythmEvent("stop", {});
       page.classList.remove("brawl-play");
     }
   });
