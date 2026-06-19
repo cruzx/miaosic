@@ -1,0 +1,63 @@
+export const RHYTHM_CHARTS = {
+  tutorial: {
+    id: "tutorial",
+    title: "新手节拍战",
+    bpm: 112,
+    duration: 32,
+    lanes: ["C", "D", "E", "G"],
+    objective: "跟着节拍命中音符，为 RockCat 充能。",
+    musicTip: "C、D、E、G 是本关的战斗音符。先按准节拍，再记住音高位置。",
+    notes: [
+      { time: 1.0, lane: 0, type: "tap" },
+      { time: 1.55, lane: 1, type: "tap" },
+      { time: 2.1, lane: 2, type: "tap" },
+      { time: 2.65, lane: 3, type: "tap" },
+      { time: 3.45, lane: 0, type: "tap" },
+      { time: 4.0, lane: 2, type: "tap" },
+      { time: 4.55, lane: 1, type: "tap" },
+      { time: 5.1, lane: 3, type: "tap" },
+      { time: 6.0, lane: 0, type: "hold", duration: 0.75 },
+      { time: 7.05, lane: 2, type: "tap" },
+      { time: 7.6, lane: 3, type: "tap" },
+      { time: 8.3, lane: 1, type: "tap" },
+      { time: 8.85, lane: 0, type: "tap" },
+      { time: 9.4, lane: 2, type: "tap" },
+      { time: 10.1, lane: 3, type: "hold", duration: 0.85 },
+      { time: 11.25, lane: 2, type: "tap" },
+      { time: 11.8, lane: 1, type: "tap" },
+      { time: 12.35, lane: 0, type: "tap" },
+      { time: 13.1, lane: 0, type: "tap" },
+      { time: 13.65, lane: 1, type: "tap" },
+      { time: 14.2, lane: 2, type: "tap" },
+      { time: 14.75, lane: 3, type: "tap" },
+      { time: 15.5, lane: 3, type: "tap" },
+      { time: 16.05, lane: 2, type: "tap" },
+      { time: 16.6, lane: 1, type: "tap" },
+      { time: 17.15, lane: 0, type: "tap" },
+      { time: 18.0, lane: 1, type: "hold", duration: 0.65 },
+      { time: 19.0, lane: 3, type: "tap" },
+      { time: 19.55, lane: 2, type: "tap" },
+      { time: 20.1, lane: 0, type: "tap" },
+      { time: 21.0, lane: 2, type: "tap" },
+      { time: 21.55, lane: 3, type: "tap" },
+      { time: 22.1, lane: 1, type: "tap" },
+      { time: 22.65, lane: 0, type: "tap" },
+      { time: 23.4, lane: 3, type: "hold", duration: 0.95 },
+      { time: 24.6, lane: 0, type: "tap" },
+      { time: 25.15, lane: 1, type: "tap" },
+      { time: 25.7, lane: 2, type: "tap" },
+      { time: 26.25, lane: 3, type: "tap" },
+      { time: 27.1, lane: 0, type: "tap" },
+      { time: 27.65, lane: 2, type: "tap" },
+      { time: 28.2, lane: 1, type: "tap" },
+      { time: 28.75, lane: 3, type: "tap" }
+    ]
+  }
+};
+
+export const JUDGE_WINDOWS = {
+  perfect: 0.075,
+  great: 0.145,
+  good: 0.24,
+  miss: 0.34
+};
