@@ -1,19 +1,23 @@
 import { createGameRuntime } from "./systems/game-runtime.js";
-import { mountBrawlRestyle } from "./ui/brawl-restyle.js";
-import { mountBrawlCleanup } from "./ui/brawl-cleanup.js";
-import { mountFreshLearningTheme } from "./ui/fresh-learning-theme.js";
-import { mountMusicLearningOverlay } from "./ui/music-learning-overlay.js";
-import { mountRhythmBattle } from "./ui/rhythm-battle.js";
-import { mountRhythmArena3D } from "./scene/rhythm-arena-3d.js";
+import { mountMusicIsland } from "./scene/music-island.js";
+import { mountFindSoundGame } from "./ui/find-sound-game.js";
 
-document.title = "Miaosic";
+document.title = "Miaosic · 音乐岛";
 document.documentElement.dataset.app = "miaosic";
+document.documentElement.dataset.experience = "music-island";
 
 const runtime = createGameRuntime();
+const cleanups = [
+  mountMusicIsland(runtime),
+  mountFindSoundGame(runtime)
+];
 
-mountBrawlRestyle(runtime);
-mountBrawlCleanup();
-mountFreshLearningTheme();
-mountRhythmArena3D();
-mountRhythmBattle();
-mountMusicLearningOverlay();
+window.miaosic = {
+  runtime,
+  reset() {
+    runtime.reset();
+  },
+  destroy() {
+    cleanups.forEach((cleanup) => cleanup?.());
+  }
+};
