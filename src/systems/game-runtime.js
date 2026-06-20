@@ -2,42 +2,46 @@ const SOUND_LIBRARY = [
   {
     id: "wave-bell",
     name: "海浪铃声",
-    role: "岛屿入口",
-    emoji: "🌊",
+    role: "海边入口",
+    icon: "wave",
     color: "#49b8ff",
     frequency: 523.25,
     waveform: "sine",
-    copy: "像海浪拍到玻璃贝壳，声音清亮、稳定，是音乐岛的安全感。"
+    hint: "清亮、平稳、像水面反光",
+    copy: "海浪铃声：声音清亮、平稳，像水面反光。"
   },
   {
     id: "forest-marimba",
     name: "森林木琴",
     role: "节奏森林",
-    emoji: "🌿",
+    icon: "leaf",
     color: "#7ed957",
     frequency: 659.25,
     waveform: "triangle",
-    copy: "短促、有弹性，适合训练用户识别木质颗粒感。"
+    hint: "短、弹、像木头轻轻敲击",
+    copy: "森林木琴：声音短促、有弹性，像木头轻轻敲击。"
   },
   {
     id: "star-synth",
     name: "星星合成器",
     role: "夜光灯塔",
-    emoji: "✨",
+    icon: "spark",
     color: "#b78cff",
     frequency: 783.99,
     waveform: "sawtooth",
-    copy: "亮、薄、带一点未来感，是找声音玩法里的高辨识目标。"
+    hint: "亮、薄、带一点电子感",
+    copy: "星星合成器：声音更亮、更薄，带一点电子感。"
   },
   {
     id: "drum-shell",
     name: "贝壳鼓点",
     role: "沙滩鼓圈",
-    emoji: "🥁",
+    icon: "drum",
     color: "#ffd447",
     frequency: 164.81,
     waveform: "square",
-    copy: "低频更厚，像脚踩沙滩时的回弹，用来建立节拍感。"
+    hint: "低、厚、像鼓点落下去",
+    copy: "贝壳鼓点：声音更低、更厚，像鼓点落下去。"
   }
 ];
 
