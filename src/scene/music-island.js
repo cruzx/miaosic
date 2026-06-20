@@ -135,7 +135,108 @@ function ensureStyle() {
       display: grid;
       place-items: center;
       box-shadow: 0 9px 0 rgba(23,51,74,.18);
-      font-size: 46px;
+    }
+    .music-mark {
+      width: 42px;
+      height: 42px;
+      position: relative;
+      display: inline-block;
+      color: var(--sound-color, #49b8ff);
+    }
+    .music-mark::before,
+    .music-mark::after {
+      content: "";
+      position: absolute;
+      box-sizing: border-box;
+    }
+    .music-mark--home::before {
+      left: 8px;
+      top: 14px;
+      width: 26px;
+      height: 18px;
+      border: 5px solid currentColor;
+      border-top: 0;
+      border-radius: 4px 4px 10px 10px;
+    }
+    .music-mark--home::after {
+      left: 8px;
+      top: 5px;
+      width: 26px;
+      height: 26px;
+      border-left: 5px solid currentColor;
+      border-top: 5px solid currentColor;
+      transform: rotate(45deg);
+      border-radius: 5px;
+    }
+    .music-mark--wave::before {
+      left: 3px;
+      top: 11px;
+      width: 36px;
+      height: 20px;
+      border: 5px solid currentColor;
+      border-color: transparent transparent currentColor currentColor;
+      border-radius: 50%;
+      transform: rotate(-9deg);
+    }
+    .music-mark--wave::after {
+      left: 13px;
+      top: 18px;
+      width: 24px;
+      height: 13px;
+      border-bottom: 5px solid currentColor;
+      border-radius: 50%;
+    }
+    .music-mark--leaf::before {
+      left: 9px;
+      top: 5px;
+      width: 24px;
+      height: 32px;
+      border: 5px solid currentColor;
+      border-radius: 90% 12% 90% 12%;
+      transform: rotate(38deg);
+    }
+    .music-mark--leaf::after {
+      left: 19px;
+      top: 17px;
+      width: 5px;
+      height: 22px;
+      background: currentColor;
+      transform: rotate(38deg);
+      border-radius: 99px;
+    }
+    .music-mark--spark::before {
+      left: 16px;
+      top: 2px;
+      width: 10px;
+      height: 38px;
+      background: currentColor;
+      clip-path: polygon(50% 0, 68% 36%, 100% 50%, 68% 64%, 50% 100%, 32% 64%, 0 50%, 32% 36%);
+    }
+    .music-mark--spark::after {
+      left: 2px;
+      top: 17px;
+      width: 38px;
+      height: 8px;
+      background: currentColor;
+      clip-path: polygon(0 50%, 36% 32%, 50% 0, 64% 32%, 100% 50%, 64% 68%, 50% 100%, 36% 68%);
+      opacity: .72;
+    }
+    .music-mark--drum::before {
+      left: 7px;
+      top: 14px;
+      width: 28px;
+      height: 20px;
+      border: 5px solid currentColor;
+      border-radius: 8px 8px 13px 13px;
+    }
+    .music-mark--drum::after {
+      left: 5px;
+      top: 7px;
+      width: 32px;
+      height: 13px;
+      border: 5px solid currentColor;
+      border-radius: 50%;
+      background: rgba(255,255,255,.72);
     }
     .sound-node {
       position: absolute;
@@ -152,7 +253,6 @@ function ensureStyle() {
       transform: translate(-50%, -50%) rotate(3deg);
       color: #17334a;
     }
-    .sound-node b { font-size: 30px; line-height: 1; }
     .sound-node span { font-size: 11px; font-weight: 950; text-align: center; }
     .sound-node.is-active {
       outline: 5px solid var(--sound-color);
@@ -193,10 +293,14 @@ function ensureStyle() {
   document.head.appendChild(style);
 }
 
+function soundIcon(name, modifier = "") {
+  return `<i class="music-mark music-mark--${name} ${modifier}" aria-hidden="true"></i>`;
+}
+
 function nodeTemplate(sound, isActive) {
   return `
     <div class="sound-node ${isActive ? "is-active" : ""}" style="--sound-color:${sound.color}">
-      <b>${sound.emoji}</b>
+      ${soundIcon(sound.icon)}
       <span>${sound.role}</span>
     </div>
   `;
@@ -230,13 +334,13 @@ export function mountMusicIsland(runtime) {
       </header>
       <section class="music-island__map" aria-label="音乐岛地图">
         <div class="music-island__land">
-          <div class="music-island__center">🎧</div>
+          <div class="music-island__center">${soundIcon("home")}</div>
           ${state.sounds.map((sound) => nodeTemplate(sound, sound.id === target.id)).join("")}
         </div>
       </section>
       <footer class="music-island__dock">
         <div class="music-island__card">
-          <strong>当前任务：找到「${target.name}」</strong>
+          <strong>当前任务：先试听，再找到「${target.name}」</strong>
           <div class="music-island__stats">
             <div class="music-island__stat">能量<strong>${state.energy}%</strong></div>
             <div class="music-island__stat">连击<strong>${state.combo}</strong></div>
