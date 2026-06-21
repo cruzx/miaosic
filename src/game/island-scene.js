@@ -14,13 +14,14 @@ export function createIslandScene({
   host,
   getState,
   onSample,
-  onSubmit,
   onLabels,
   onTip
 }) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.92;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setClearColor(0xffffff, 0);
@@ -29,36 +30,38 @@ export function createIslandScene({
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xaee9ff, 9.5, 18);
-  const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 60);
-  camera.position.set(0, 5.7, 9.5);
-  camera.lookAt(0, 0.45, 0);
+  scene.fog = new THREE.Fog(0x9edff4, 11, 21);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 60);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x6fbf81, 2.55));
-  const sun = new THREE.DirectionalLight(0xffffff, 3.2);
-  sun.position.set(-4.5, 8, 6);
+  scene.add(new THREE.HemisphereLight(0xf6fdff, 0x4c9c67, 1.5));
+  const sun = new THREE.DirectionalLight(0xfff7e5, 1.95);
+  sun.position.set(-4.5, 8, 5.5);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
   sun.shadow.camera.left = -7;
   sun.shadow.camera.right = 7;
   sun.shadow.camera.top = 7;
   sun.shadow.camera.bottom = -7;
+  sun.shadow.bias = -0.0004;
   scene.add(sun);
-  const fill = new THREE.DirectionalLight(0xbce9ff, 1.1);
-  fill.position.set(5, 2.5, -3);
+  const fill = new THREE.DirectionalLight(0x77c9ff, 0.58);
+  fill.position.set(5, 3, -4);
   scene.add(fill);
 
   const islandGroup = createIsland(THREE);
+  islandGroup.rotation.y = 0.18;
   scene.add(islandGroup);
+
   const water = new THREE.Mesh(
     new THREE.CylinderGeometry(5.8, 5.8, 0.08, 72),
-    new THREE.MeshBasicMaterial({ color: 0x56b6d4, transparent: true, opacity: 0.5, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color: 0x2f9ec5, transparent: true, opacity: 0.58, depthWrite: false })
   );
   water.position.y = -0.78;
   scene.add(water);
+
   const waterRing = new THREE.Mesh(
-    new THREE.TorusGeometry(4.65, 0.12, 8, 96),
-    new THREE.MeshBasicMaterial({ color: 0xc9f4ff, transparent: true, opacity: 0.44, depthWrite: false })
+    new THREE.TorusGeometry(4.65, 0.1, 8, 96),
+    new THREE.MeshBasicMaterial({ color: 0xe2fbff, transparent: true, opacity: 0.52, depthWrite: false })
   );
   waterRing.rotation.x = Math.PI / 2;
   waterRing.position.y = -0.67;
@@ -66,9 +69,9 @@ export function createIslandScene({
 
   [[-2.75, -2, 0.82], [-2.05, 2.1, 0.9], [2.7, -1.6, 0.88], [2.45, 2.15, 0.72], [0.65, -2.75, 0.62]]
     .forEach(([x, z, scale]) => islandGroup.add(createTree(THREE, x, z, scale)));
-  islandGroup.add(createHouse(THREE, 0, -0.7, 0xfff7da, 0xffd765, 1.05));
-  islandGroup.add(createHouse(THREE, -2.75, 1.05, 0xe8f5ff, 0x8fcce9, 0.72));
-  islandGroup.add(createHouse(THREE, 2.72, 1.1, 0xfff0df, 0xf5aa67, 0.72));
+  islandGroup.add(createHouse(THREE, 0, -0.7, 0xfff1bd, 0xffb848, 1.04));
+  islandGroup.add(createHouse(THREE, -2.75, 1.05, 0xd7efff, 0x4dafe8, 0.72));
+  islandGroup.add(createHouse(THREE, 2.72, 1.1, 0xffdec1, 0xf08a4b, 0.72));
 
   const clouds = [
     createCloud(THREE, -5.5, 4.2, -2.5, 1.2),
@@ -82,11 +85,8 @@ export function createIslandScene({
   });
 
   const bowl = createBowl(THREE);
-  bowl.position.set(0, -0.42, 4.15);
-  bowl.scale.setScalar(1.14);
   scene.add(bowl);
 
-  const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.02);
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   const hitMeshes = [];
@@ -101,20 +101,21 @@ export function createIslandScene({
     startX: 0,
     startY: 0,
     startRotation: 0,
-    mode: "",
     catId: null,
-    dragging: false,
-    moved: false,
-    saved: null
+    moved: false
   };
 
   let animationFrame = 0;
   let destroyed = false;
   let bowlPulseUntil = 0;
   let celebrateUntil = 0;
+  let feeding = null;
+  let userRotatedAt = 0;
 
   const clearCats = () => {
-    catEntries.forEach((entry) => islandGroup.remove(entry.group));
+    catEntries.forEach((entry) => {
+      if (entry.group.parent) entry.group.parent.remove(entry.group);
+    });
     catEntries.clear();
     hitMeshes.splice(0, hitMeshes.length);
   };
@@ -125,10 +126,13 @@ export function createIslandScene({
       const group = createCatMesh(THREE, cat, hitMeshes);
       const [x, y, z] = CAT_POSITIONS[index] || [Math.cos(index) * 2.2, 0.62, Math.sin(index) * 2.2];
       group.position.set(x, y, z);
-      group.rotation.y = Math.atan2(-x, -z) * 0.25;
+      group.rotation.y = Math.atan2(-x, -z) * 0.32;
+      group.scale.setScalar(1.08);
       group.userData.homePosition = group.position.clone();
       group.userData.homeRotation = group.rotation.clone();
+      group.userData.homeScale = 1.08;
       group.userData.seed = index * 1.3 + cat.id.length;
+      group.userData.rejectUntil = 0;
       islandGroup.add(group);
       catEntries.set(cat.id, { cat, group });
     });
@@ -145,41 +149,6 @@ export function createIslandScene({
     updatePointer(event);
     const hit = raycaster.intersectObjects(hitMeshes, false)[0];
     return hit ? findCatId(hit.object) : null;
-  };
-
-  const restoreDraggedCat = () => {
-    if (!pointerState.saved || !pointerState.catId) return;
-    const entry = catEntries.get(pointerState.catId);
-    if (!entry) return;
-    islandGroup.attach(entry.group);
-    entry.group.position.copy(pointerState.saved.position);
-    entry.group.rotation.copy(pointerState.saved.rotation);
-    entry.group.scale.setScalar(1);
-    pointerState.saved = null;
-  };
-
-  const beginDrag = (event) => {
-    const state = getState();
-    const entry = catEntries.get(pointerState.catId);
-    if (!entry || !state.heardTarget) return;
-    pointerState.dragging = true;
-    pointerState.saved = { position: entry.group.position.clone(), rotation: entry.group.rotation.clone() };
-    scene.attach(entry.group);
-    entry.group.scale.setScalar(1.15);
-    updatePointer(event);
-    const point = new THREE.Vector3();
-    if (raycaster.ray.intersectPlane(dragPlane, point)) entry.group.position.copy(point.setY(1.02));
-  };
-
-  const dragCat = (event) => {
-    const entry = catEntries.get(pointerState.catId);
-    if (!entry) return;
-    updatePointer(event);
-    const point = new THREE.Vector3();
-    if (raycaster.ray.intersectPlane(dragPlane, point)) {
-      entry.group.position.lerp(point.setY(1.02), 0.72);
-      entry.group.rotation.y = Math.sin(performance.now() / 180) * 0.08;
-    }
   };
 
   const getBowlScreen = () => {
@@ -208,17 +177,22 @@ export function createIslandScene({
     }
   };
 
+  const clearPointer = () => {
+    pointerState.active = false;
+    pointerState.pointerId = -1;
+    pointerState.catId = null;
+    pointerState.moved = false;
+  };
+
   const onPointerDown = (event) => {
     const state = getState();
-    if ((event.button !== undefined && event.button !== 0) || !state.started || state.phase === "reward") return;
+    if ((event.button !== undefined && event.button !== 0) || !state.started || state.phase === "reward" || state.phase === "feeding") return;
     pointerState.active = true;
     pointerState.pointerId = event.pointerId;
     pointerState.startX = event.clientX;
     pointerState.startY = event.clientY;
     pointerState.startRotation = islandGroup.rotation.y;
     pointerState.catId = pickCat(event);
-    pointerState.mode = pointerState.catId ? "cat" : "rotate";
-    pointerState.dragging = false;
     pointerState.moved = false;
     renderer.domElement.setPointerCapture?.(event.pointerId);
   };
@@ -228,47 +202,23 @@ export function createIslandScene({
     const dx = event.clientX - pointerState.startX;
     const dy = event.clientY - pointerState.startY;
     const distance = Math.hypot(dx, dy);
-    if (distance > 5) pointerState.moved = true;
-    if (pointerState.mode === "rotate") {
-      islandGroup.rotation.y = pointerState.startRotation + dx * 0.009;
-      islandGroup.rotation.x = THREE.MathUtils.clamp(-dy * 0.0018, -0.08, 0.08);
-      return;
-    }
-    if (pointerState.mode === "cat" && !pointerState.dragging && distance > 11) beginDrag(event);
-    if (pointerState.dragging) dragCat(event);
-  };
-
-  const clearPointer = () => {
-    pointerState.active = false;
-    pointerState.pointerId = -1;
-    pointerState.mode = "";
-    pointerState.catId = null;
-    pointerState.dragging = false;
-    pointerState.saved = null;
+    if (distance <= 7) return;
+    pointerState.moved = true;
+    userRotatedAt = performance.now();
+    islandGroup.rotation.y = pointerState.startRotation + dx * 0.0095;
+    islandGroup.rotation.x = THREE.MathUtils.clamp(-dy * 0.0014, -0.065, 0.065);
   };
 
   const onPointerUp = async (event) => {
     if (!pointerState.active || pointerState.pointerId !== event.pointerId) return;
     try { renderer.domElement.releasePointerCapture?.(event.pointerId); } catch {}
-    if (pointerState.mode === "cat") {
-      if (pointerState.dragging) {
-        const target = getBowlScreen();
-        const distance = Math.hypot(event.clientX - target.x, event.clientY - target.y);
-        const catId = pointerState.catId;
-        restoreDraggedCat();
-        if (distance < Math.max(82, renderer.domElement.clientWidth * 0.13)) await onSubmit(catId);
-        else onTip("再靠近碗口一点", "warn");
-      } else if (!pointerState.moved) {
-        await onSample(pointerState.catId);
-      }
-    }
+    const catId = pointerState.catId;
+    const shouldSample = Boolean(catId && !pointerState.moved);
     clearPointer();
+    if (shouldSample) await onSample(catId);
   };
 
-  const onPointerCancel = () => {
-    restoreDraggedCat();
-    clearPointer();
-  };
+  const onPointerCancel = () => clearPointer();
 
   const resize = () => {
     const width = Math.max(1, host.clientWidth);
@@ -276,14 +226,14 @@ export function createIslandScene({
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     const portrait = camera.aspect < 0.78;
-    camera.fov = portrait ? 45 : 39;
-    camera.position.set(0, portrait ? 6.25 : 5.45, portrait ? 10.65 : 9.2);
-    camera.lookAt(0, portrait ? 0.35 : 0.45, 0);
+    camera.fov = portrait ? 43 : 38;
+    camera.position.set(0, portrait ? 6.65 : 5.55, portrait ? 11.55 : 9.45);
+    camera.lookAt(0, portrait ? 0.38 : 0.45, 0);
     camera.updateProjectionMatrix();
-    islandGroup.scale.setScalar(portrait ? 1.02 : 1.1);
-    islandGroup.position.y = portrait ? 0.5 : 0.15;
-    bowl.position.set(0, portrait ? -0.62 : -0.38, portrait ? 4.35 : 4.1);
-    bowl.scale.setScalar(portrait ? 1.18 : 1.05);
+    islandGroup.scale.setScalar(portrait ? 0.96 : 1.08);
+    islandGroup.position.y = portrait ? 0.28 : 0.1;
+    bowl.position.set(0, portrait ? 0.1 : 0.18, portrait ? 3.1 : 3.2);
+    bowl.scale.setScalar(portrait ? 0.9 : 0.94);
   };
 
   const updateLabels = () => {
@@ -291,12 +241,12 @@ export function createIslandScene({
     const state = getState();
     const labels = [];
     catEntries.forEach((entry, id) => {
-      if (!entry.group.visible || (pointerState.dragging && pointerState.catId === id)) return;
+      if (!entry.group.visible || feeding?.entry === entry) return;
       entry.group.getWorldPosition(temp);
-      const front = temp.z > -1.1;
-      temp.y += 1.5;
+      const front = temp.z > -1.45;
+      temp.y += 1.42;
       temp.project(camera);
-      const visible = front && temp.z > -1 && temp.z < 1 && Math.abs(temp.x) < 1.12 && temp.y > -1.15 && temp.y < 1.15;
+      const visible = front && temp.z > -1 && temp.z < 1 && Math.abs(temp.x) < 1.12 && temp.y > -1.12 && temp.y < 1.14;
       labels.push({
         id,
         name: entry.cat.name,
@@ -329,47 +279,78 @@ export function createIslandScene({
     }
   };
 
+  const updateFeeding = (now) => {
+    if (!feeding) return;
+    const t = THREE.MathUtils.clamp((now - feeding.start) / feeding.duration, 0, 1);
+    feeding.entry.group.position.lerpVectors(feeding.from, feeding.to, t);
+    feeding.entry.group.position.y += Math.sin(Math.PI * t) * 1.45;
+    feeding.entry.group.rotation.y += 0.18;
+    feeding.entry.group.rotation.z = Math.sin(Math.PI * t) * -0.24;
+    feeding.entry.group.scale.setScalar(THREE.MathUtils.lerp(feeding.startScale, 0.62, t));
+    if (t < 1) return;
+    const { entry, resolve, color } = feeding;
+    entry.group.visible = false;
+    bowl.getWorldPosition(temp);
+    burst(temp.add(new THREE.Vector3(0, 0.75, 0)), color, 38);
+    celebrateUntil = now + 1400;
+    feeding = null;
+    resolve(true);
+  };
+
   const animate = () => {
     if (destroyed) return;
     const delta = Math.min(0.04, clock.getDelta());
     const now = performance.now();
     const state = getState();
-    if (!pointerState.active && !pointerState.dragging) {
-      islandGroup.rotation.y += delta * 0.035;
+
+    if (!pointerState.active && !feeding && now - userRotatedAt > 1600) {
+      islandGroup.rotation.y += delta * 0.012;
       islandGroup.rotation.x *= 0.94;
     }
+
     catEntries.forEach((entry) => {
       const group = entry.group;
-      if (!group.visible || (pointerState.dragging && pointerState.catId === entry.cat.id)) return;
+      if (!group.visible || feeding?.entry === entry) return;
       const seed = group.userData.seed;
       const jumpLeft = Math.max(0, (group.userData.jumpUntil - now) / 520);
-      group.position.y = group.userData.homePosition.y + Math.sin(now / 620 + seed) * 0.035 + Math.sin(jumpLeft * Math.PI) * 0.28;
+      const rejectLeft = Math.max(0, (group.userData.rejectUntil - now) / 620);
+      const shake = rejectLeft ? Math.sin((1 - rejectLeft) * Math.PI * 9) * rejectLeft * 0.13 : 0;
+      group.position.x = group.userData.homePosition.x + shake;
+      group.position.y = group.userData.homePosition.y + Math.sin(now / 620 + seed) * 0.035 + Math.sin(jumpLeft * Math.PI) * 0.26;
+      group.position.z = group.userData.homePosition.z;
+      group.scale.setScalar(group.userData.homeScale * (1 + Math.sin(jumpLeft * Math.PI) * 0.08));
       group.userData.head.rotation.z = Math.sin(now / 900 + seed) * 0.035;
       group.userData.tail.rotation.y = Math.sin(now / 420 + seed) * 0.16;
       const sampledLeft = Math.max(0, (group.userData.sampledUntil - now) / 1200);
       const selected = state.selectedCatId === entry.cat.id;
-      group.userData.ring.material.opacity = selected ? 0.55 + Math.sin(now / 180) * 0.15 : sampledLeft * 0.48;
-      group.userData.ring.scale.setScalar(1 + (selected ? Math.sin(now / 210) * 0.1 : (1 - sampledLeft) * 0.24));
+      group.userData.ring.material.opacity = selected ? 0.68 + Math.sin(now / 180) * 0.12 : sampledLeft * 0.34;
+      group.userData.ring.scale.setScalar(1 + (selected ? Math.sin(now / 210) * 0.08 : (1 - sampledLeft) * 0.18));
     });
+
+    updateFeeding(now);
+
     const bowlLeft = Math.max(0, (bowlPulseUntil - now) / 1450);
-    bowl.userData.pulse.material.opacity = bowlLeft * (0.38 + Math.sin(now / 120) * 0.12);
-    bowl.userData.pulse.scale.setScalar(1 + (1 - bowlLeft) * 1.35);
+    bowl.userData.pulse.material.opacity = bowlLeft * (0.44 + Math.sin(now / 120) * 0.12);
+    bowl.userData.pulse.scale.setScalar(1 + (1 - bowlLeft) * 1.2);
     bowl.userData.food.position.y = 0.49 + Math.sin(now / 320) * 0.012 + bowlLeft * 0.05;
-    const celebrate = Math.max(0, (celebrateUntil - now) / 1500);
-    const baseScale = camera.aspect < 0.78 ? 1.18 : 1.05;
+
+    const celebrate = Math.max(0, (celebrateUntil - now) / 1400);
+    const baseScale = camera.aspect < 0.78 ? 0.9 : 0.94;
     if (celebrate) {
       bowl.rotation.y += delta * 0.9;
-      bowl.scale.setScalar(baseScale * (1 + Math.sin(celebrate * Math.PI) * 0.09));
+      bowl.scale.setScalar(baseScale * (1 + Math.sin(celebrate * Math.PI) * 0.1));
     } else {
       bowl.rotation.y *= 0.9;
       bowl.scale.lerp(temp.set(baseScale, baseScale, baseScale), 0.12);
     }
-    waterRing.rotation.z += delta * 0.03;
-    waterRing.material.opacity = 0.38 + Math.sin(now / 1000) * 0.08;
+
+    waterRing.rotation.z += delta * 0.025;
+    waterRing.material.opacity = 0.45 + Math.sin(now / 1000) * 0.08;
     clouds.forEach((cloud) => {
-      cloud.position.x += Math.sin(now / 2200 + cloud.userData.seed) * delta * 0.06;
+      cloud.position.x += Math.sin(now / 2200 + cloud.userData.seed) * delta * 0.055;
       cloud.position.y += Math.cos(now / 1800 + cloud.userData.seed) * delta * 0.025;
     });
+
     animateParticles(delta);
     updateLabels();
     renderer.render(scene, camera);
@@ -386,22 +367,54 @@ export function createIslandScene({
 
   return {
     rebuildCats,
-    restoreCats() { catEntries.forEach((entry) => { entry.group.visible = true; }); },
-    pulseBowl() { bowlPulseUntil = performance.now() + 1450; },
-    pulseCat(catId, selected = false) {
+    restoreCats() {
+      feeding = null;
+      catEntries.forEach((entry) => {
+        if (entry.group.parent !== islandGroup) islandGroup.attach(entry.group);
+        entry.group.position.copy(entry.group.userData.homePosition);
+        entry.group.rotation.copy(entry.group.userData.homeRotation);
+        entry.group.scale.setScalar(entry.group.userData.homeScale);
+        entry.group.visible = true;
+      });
+    },
+    pulseBowl() {
+      bowlPulseUntil = performance.now() + 1450;
+    },
+    selectCat(catId) {
       const entry = catEntries.get(catId);
       if (!entry) return;
       const now = performance.now();
       entry.group.userData.jumpUntil = now + 520;
       entry.group.userData.sampledUntil = now + 1200;
-      entry.group.userData.ring.material.color.set(selected ? 0x6fd082 : entry.cat.accent);
+      entry.group.userData.ring.material.color.set(0xffc947);
     },
-    celebrate(catId, color) {
+    rejectCat(catId) {
       const entry = catEntries.get(catId);
-      if (entry) entry.group.visible = false;
+      if (!entry) return;
+      entry.group.userData.rejectUntil = performance.now() + 620;
+      entry.group.userData.ring.material.color.set(0xff5c62);
+      entry.group.userData.ring.material.opacity = 0.72;
+    },
+    feedCat(catId, color) {
+      const entry = catEntries.get(catId);
+      if (!entry || feeding) return Promise.resolve(false);
+      entry.group.getWorldPosition(temp);
+      const from = temp.clone();
+      scene.attach(entry.group);
       bowl.getWorldPosition(temp);
-      burst(temp.add(new THREE.Vector3(0, 0.8, 0)), color, 34);
-      celebrateUntil = performance.now() + 1500;
+      const to = temp.clone().add(new THREE.Vector3(0, 0.65, 0));
+      return new Promise((resolve) => {
+        feeding = {
+          entry,
+          from,
+          to,
+          start: performance.now(),
+          duration: 680,
+          startScale: entry.group.scale.x,
+          color,
+          resolve
+        };
+      });
     },
     getScreenTargets() {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -410,7 +423,10 @@ export function createIslandScene({
         entry.group.getWorldPosition(temp);
         temp.y += 0.8;
         temp.project(camera);
-        targets[id] = { x: rect.left + (temp.x * 0.5 + 0.5) * rect.width, y: rect.top + (-temp.y * 0.5 + 0.5) * rect.height };
+        targets[id] = {
+          x: rect.left + (temp.x * 0.5 + 0.5) * rect.width,
+          y: rect.top + (-temp.y * 0.5 + 0.5) * rect.height
+        };
       });
       const target = getBowlScreen();
       targets.bowl = { x: target.x, y: target.y };
@@ -425,7 +441,10 @@ export function createIslandScene({
       renderer.domElement.removeEventListener("pointerup", onPointerUp);
       renderer.domElement.removeEventListener("pointercancel", onPointerCancel);
       renderer.dispose();
-      particles.forEach((particle) => { particle.geometry.dispose(); particle.material.dispose(); });
+      particles.forEach((particle) => {
+        particle.geometry.dispose();
+        particle.material.dispose();
+      });
       host.innerHTML = "";
       onLabels([]);
     }
