@@ -23,45 +23,45 @@ const NOTE_CATS = [
     id: "cloud",
     name: "云朵",
     token: "C",
-    body: 0xfff8e7,
-    accent: 0x84c8f4,
-    dark: 0x24445b,
+    body: 0xf7fbff,
+    accent: 0x37aef0,
+    dark: 0x173f59,
     pattern: "ears"
   },
   {
     id: "sprout",
     name: "芽芽",
     token: "D",
-    body: 0xcdf0c4,
-    accent: 0x5ebd75,
-    dark: 0x214a36,
+    body: 0xaee58c,
+    accent: 0x31a95b,
+    dark: 0x17452e,
     pattern: "forehead"
   },
   {
     id: "glint",
     name: "闪闪",
     token: "E",
-    body: 0xffe29a,
-    accent: 0xffa94f,
-    dark: 0x573a1f,
+    body: 0xffcf66,
+    accent: 0xf47e35,
+    dark: 0x5d3519,
     pattern: "cheeks"
   },
   {
     id: "sea-salt",
     name: "海盐",
     token: "G",
-    body: 0xbfe8ff,
-    accent: 0x4a9fd8,
-    dark: 0x21465f,
+    body: 0x82d4ff,
+    accent: 0x267fc8,
+    dark: 0x173f5d,
     pattern: "tail"
   },
   {
     id: "berry",
     name: "莓莓",
     token: "A",
-    body: 0xffc9dc,
-    accent: 0xe96b99,
-    dark: 0x5b2940,
+    body: 0xff9fc1,
+    accent: 0xd94a82,
+    dark: 0x5a213c,
     pattern: "forehead"
   }
 ];
@@ -71,27 +71,27 @@ const CHORD_CATS = [
     id: "sunbeam",
     name: "晴光",
     token: "major",
-    body: 0xffe7a3,
-    accent: 0xf5a63c,
-    dark: 0x56371c,
+    body: 0xffc94f,
+    accent: 0xf07c2f,
+    dark: 0x5a3417,
     pattern: "cheeks"
   },
   {
     id: "moonshade",
     name: "月影",
     token: "minor",
-    body: 0xbfd7ff,
-    accent: 0x6e75d8,
-    dark: 0x283154,
+    body: 0x91b8ff,
+    accent: 0x5962d2,
+    dark: 0x252d58,
     pattern: "ears"
   },
   {
     id: "mist",
     name: "迷雾",
     token: "diminished",
-    body: 0xd9c7f0,
-    accent: 0x8a65b5,
-    dark: 0x3f3152,
+    body: 0xc5a8e6,
+    accent: 0x7f58ad,
+    dark: 0x40284f,
     pattern: "tail"
   }
 ];
@@ -153,7 +153,7 @@ export const STAGES = [
     catIds: ["cloud", "sprout", "glint"],
     rounds: 6,
     unlockAt: 0,
-    accent: "#ffd765"
+    accent: "#ffd44e"
   },
   {
     id: "note5",
@@ -164,7 +164,7 @@ export const STAGES = [
     catIds: ["cloud", "sprout", "glint", "sea-salt", "berry"],
     rounds: 8,
     unlockAt: 6,
-    accent: "#75c9f4"
+    accent: "#55b8ee"
   },
   {
     id: "chord3",
@@ -175,7 +175,7 @@ export const STAGES = [
     catIds: ["sunbeam", "moonshade", "mist"],
     rounds: 8,
     unlockAt: 14,
-    accent: "#bd9bea"
+    accent: "#a57bd2"
   }
 ];
 
