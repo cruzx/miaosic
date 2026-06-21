@@ -25,6 +25,10 @@ async function playToken(token, options = {}) {
 export function makeSoundPlayer() {
   return {
     async resume() {
+      await playSoundToken(
+        { frequency: 220, waveform: "sine" },
+        { duration: 0.02, volume: 0.0001, filter: 500 }
+      );
       return true;
     },
     async playTarget(token) {
@@ -50,7 +54,10 @@ export function makeSoundPlayer() {
       return 380;
     },
     async playTap() {
-      await playSoundToken({ frequency: 880, waveform: "sine" }, { duration: 0.12, volume: 0.05, filter: 2600 });
+      await playSoundToken(
+        { frequency: 880, waveform: "sine" },
+        { duration: 0.12, volume: 0.05, filter: 2600 }
+      );
     }
   };
 }
