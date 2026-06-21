@@ -1,23 +1,41 @@
-import { createGameRuntime } from "./systems/game-runtime.js";
-import { mountMusicIsland } from "./scene/music-island.js";
-import { mountFindSoundGame } from "./ui/find-sound-game.js";
+import * as THREE from "three";
+import "./styles.css";
+import { createSoundIslandGame } from "./game/sound-island-game.js";
+import { createAppShell } from "./ui/app-shell.js";
 
-document.title = "Miaosic · 音乐岛";
+document.title = "Miaosic 音乐岛";
 document.documentElement.dataset.app = "miaosic";
-document.documentElement.dataset.experience = "music-island";
+document.documentElement.dataset.experience = "sound-island";
 
-const runtime = createGameRuntime();
-const cleanups = [
-  mountMusicIsland(runtime),
-  mountFindSoundGame(runtime)
-];
+const app = document.getElementById("app");
+const shell = createAppShell(app);
+const game = createSoundIslandGame({
+  THREE,
+  host: shell.scene,
+  onState: shell.render,
+  onLabels: shell.setCatLabels,
+  onTip: shell.showTip
+});
 
-window.miaosic = {
-  runtime,
-  reset() {
-    runtime.reset();
-  },
+shell.bindActions({
+  start: game.start,
+  listen: game.listen,
+  next: game.next,
+  setStage: game.setStage
+});
+
+window.miaosicDebug = {
+  getState: game.getState,
+  getActiveCats: game.getActiveCats,
+  getScreenTargets: game.getScreenTargets,
+  playTarget: game.listen,
+  sampleCat: game.sampleCat,
+  submitCat: game.submitCat,
+  nextRound: game.next,
+  setStage: game.setStage,
+  resetProgress: game.resetProgress,
   destroy() {
-    cleanups.forEach((cleanup) => cleanup?.());
+    game.destroy();
+    shell.destroy();
   }
 };
