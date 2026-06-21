@@ -1,16 +1,16 @@
 export const CAT_POSITIONS = [
-  [-2.35, 0.62, 0.35],
-  [0.05, 0.68, -1.9],
-  [2.35, 0.62, 0.3],
-  [-1.65, 0.64, 1.85],
-  [1.72, 0.64, 1.7]
+  [-2.15, 0.62, 0.92],
+  [0.05, 0.68, -1.55],
+  [2.18, 0.62, 0.9],
+  [-1.78, 0.64, -0.85],
+  [1.76, 0.64, -0.82]
 ];
 
 export function makeMaterial(THREE, color, options = {}) {
   return new THREE.MeshStandardMaterial({
     color,
-    roughness: options.roughness ?? 0.58,
-    metalness: options.metalness ?? 0.02,
+    roughness: options.roughness ?? 0.56,
+    metalness: options.metalness ?? 0.015,
     emissive: options.emissive ?? 0x000000,
     emissiveIntensity: options.emissiveIntensity ?? 0,
     transparent: options.transparent ?? false,
@@ -37,107 +37,153 @@ function markMeshes(group, catId, hitMeshes) {
   });
 }
 
+function makeEye(THREE, darkMaterial, highlightMaterial, x) {
+  const group = new THREE.Group();
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 10), darkMaterial);
+  eye.scale.set(0.82, 1.18, 0.58);
+  group.add(eye);
+  const highlight = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), highlightMaterial);
+  highlight.position.set(-0.012, 0.024, 0.042);
+  group.add(highlight);
+  group.position.set(x, 1.04, 0.405);
+  return group;
+}
+
 export function createCatMesh(THREE, cat, hitMeshes) {
   const group = new THREE.Group();
   group.name = `cat-${cat.id}`;
   group.userData.catId = cat.id;
 
-  const bodyMaterial = makeMaterial(THREE, cat.body, { roughness: 0.7 });
-  const accentMaterial = makeMaterial(THREE, cat.accent, { roughness: 0.62 });
-  const darkMaterial = makeMaterial(THREE, cat.dark, { roughness: 0.56 });
-  const creamMaterial = makeMaterial(THREE, 0xfff5db, { roughness: 0.72 });
+  const bodyMaterial = makeMaterial(THREE, cat.body, { roughness: 0.66 });
+  const accentMaterial = makeMaterial(THREE, cat.accent, { roughness: 0.54 });
+  const darkMaterial = makeMaterial(THREE, cat.dark, { roughness: 0.48 });
+  const creamMaterial = makeMaterial(THREE, 0xfff1da, { roughness: 0.72 });
+  const whiteMaterial = makeMaterial(THREE, 0xffffff, { roughness: 0.5, emissive: 0xffffff, emissiveIntensity: 0.08 });
+  const blushMaterial = makeMaterial(THREE, 0xff8c9e, { roughness: 0.7 });
 
-  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.5, 32), new THREE.MeshBasicMaterial({ color: 0x214b59, transparent: true, opacity: 0.16, depthWrite: false }));
+  const shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.56, 36),
+    new THREE.MeshBasicMaterial({ color: 0x123e53, transparent: true, opacity: 0.2, depthWrite: false })
+  );
   shadow.rotation.x = -Math.PI / 2;
-  shadow.scale.set(1.2, 0.62, 1);
+  shadow.scale.set(1.28, 0.58, 1);
   shadow.position.y = 0.015;
   group.add(shadow);
 
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 18), bodyMaterial);
-  body.scale.set(0.9, 1.16, 0.82);
-  body.position.y = 0.43;
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 28, 20), bodyMaterial);
+  body.scale.set(0.92, 1.14, 0.84);
+  body.position.y = 0.45;
   group.add(body);
 
-  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.21, 18, 14), creamMaterial);
-  chest.scale.set(0.78, 1.2, 0.42);
-  chest.position.set(0, 0.43, 0.3);
-  group.add(chest);
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.25, 20, 16), creamMaterial);
+  belly.scale.set(0.8, 1.08, 0.42);
+  belly.position.set(0, 0.43, 0.34);
+  group.add(belly);
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.39, 26, 20), bodyMaterial);
-  head.scale.set(1.02, 0.92, 0.94);
-  head.position.y = 0.95;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.46, 30, 22), bodyMaterial);
+  head.scale.set(1.03, 0.92, 0.95);
+  head.position.y = 1.02;
   group.add(head);
 
-  const earGeometry = new THREE.ConeGeometry(0.18, 0.34, 3);
+  const earGeometry = new THREE.ConeGeometry(0.205, 0.4, 3);
   const leftEar = new THREE.Mesh(earGeometry, accentMaterial);
-  leftEar.position.set(-0.23, 1.28, 0.01);
-  leftEar.rotation.set(0.04, 0, -0.12);
+  leftEar.position.set(-0.27, 1.4, 0.015);
+  leftEar.rotation.set(0.04, 0, -0.13);
   group.add(leftEar);
   const rightEar = leftEar.clone();
-  rightEar.position.x = 0.23;
-  rightEar.rotation.z = 0.12;
+  rightEar.position.x = 0.27;
+  rightEar.rotation.z = 0.13;
   group.add(rightEar);
 
-  const muzzleLeft = new THREE.Mesh(new THREE.SphereGeometry(0.11, 14, 10), creamMaterial);
-  muzzleLeft.scale.set(1, 0.72, 0.62);
-  muzzleLeft.position.set(-0.075, 0.87, 0.34);
+  const innerEarGeometry = new THREE.ConeGeometry(0.105, 0.23, 3);
+  const leftInnerEar = new THREE.Mesh(innerEarGeometry, blushMaterial);
+  leftInnerEar.position.set(-0.27, 1.39, 0.07);
+  leftInnerEar.rotation.set(0.04, 0, -0.13);
+  leftInnerEar.scale.set(0.78, 0.78, 0.78);
+  group.add(leftInnerEar);
+  const rightInnerEar = leftInnerEar.clone();
+  rightInnerEar.position.x = 0.27;
+  rightInnerEar.rotation.z = 0.13;
+  group.add(rightInnerEar);
+
+  const muzzleLeft = new THREE.Mesh(new THREE.SphereGeometry(0.125, 16, 12), creamMaterial);
+  muzzleLeft.scale.set(1.03, 0.72, 0.66);
+  muzzleLeft.position.set(-0.082, 0.91, 0.41);
   group.add(muzzleLeft);
   const muzzleRight = muzzleLeft.clone();
-  muzzleRight.position.x = 0.075;
+  muzzleRight.position.x = 0.082;
   group.add(muzzleRight);
 
-  const eyeGeometry = new THREE.SphereGeometry(0.035, 10, 8);
-  const leftEye = new THREE.Mesh(eyeGeometry, darkMaterial);
-  leftEye.position.set(-0.13, 1.02, 0.35);
-  group.add(leftEye);
-  const rightEye = leftEye.clone();
-  rightEye.position.x = 0.13;
-  group.add(rightEye);
+  group.add(makeEye(THREE, darkMaterial, whiteMaterial, -0.145));
+  group.add(makeEye(THREE, darkMaterial, whiteMaterial, 0.145));
 
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.065, 3), darkMaterial);
-  nose.position.set(0, 0.88, 0.42);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.048, 0.07, 3), darkMaterial);
+  nose.position.set(0, 0.91, 0.49);
   nose.rotation.x = Math.PI / 2;
   group.add(nose);
 
-  const footGeometry = new THREE.SphereGeometry(0.14, 14, 10);
+  const cheekGeometry = new THREE.SphereGeometry(0.052, 12, 8);
+  const cheekLeft = new THREE.Mesh(cheekGeometry, blushMaterial);
+  cheekLeft.scale.set(1.28, 0.62, 0.45);
+  cheekLeft.position.set(-0.23, 0.88, 0.4);
+  group.add(cheekLeft);
+  const cheekRight = cheekLeft.clone();
+  cheekRight.position.x = 0.23;
+  group.add(cheekRight);
+
+  const footGeometry = new THREE.SphereGeometry(0.155, 16, 12);
   const leftFoot = new THREE.Mesh(footGeometry, bodyMaterial);
-  leftFoot.scale.set(1, 0.58, 1.2);
-  leftFoot.position.set(-0.2, 0.13, 0.18);
+  leftFoot.scale.set(1.08, 0.58, 1.22);
+  leftFoot.position.set(-0.22, 0.13, 0.2);
   group.add(leftFoot);
   const rightFoot = leftFoot.clone();
-  rightFoot.position.x = 0.2;
+  rightFoot.position.x = 0.22;
   group.add(rightFoot);
 
   const tailCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.31, 0.35, -0.08),
-    new THREE.Vector3(0.58, 0.48, -0.02),
-    new THREE.Vector3(0.62, 0.79, 0.04),
-    new THREE.Vector3(0.48, 0.93, 0.12)
+    new THREE.Vector3(0.34, 0.34, -0.08),
+    new THREE.Vector3(0.62, 0.49, -0.02),
+    new THREE.Vector3(0.68, 0.83, 0.04),
+    new THREE.Vector3(0.5, 1.02, 0.13)
   ]);
-  const tail = new THREE.Mesh(new THREE.TubeGeometry(tailCurve, 18, 0.07, 8, false), accentMaterial);
+  const tail = new THREE.Mesh(new THREE.TubeGeometry(tailCurve, 20, 0.075, 9, false), accentMaterial);
   group.add(tail);
+
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.032, 8, 36), darkMaterial);
+  collar.rotation.x = Math.PI / 2;
+  collar.position.set(0, 0.72, 0.02);
+  collar.scale.set(1, 0.84, 1);
+  group.add(collar);
+
+  const pendant = new THREE.Mesh(new THREE.OctahedronGeometry(0.07, 0), accentMaterial);
+  pendant.position.set(0, 0.68, 0.34);
+  pendant.rotation.z = Math.PI / 4;
+  group.add(pendant);
 
   if (cat.pattern === "forehead") {
     [-0.12, 0, 0.12].forEach((x, index) => {
-      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.15 - index * 0.018, 0.025), accentMaterial);
-      stripe.position.set(x, 1.16, 0.355);
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.17 - index * 0.02, 0.026), accentMaterial);
+      stripe.position.set(x, 1.23, 0.41);
       stripe.rotation.z = x * 0.8;
       group.add(stripe);
     });
   }
 
   if (cat.pattern === "cheeks") {
-    const cheekGeometry = new THREE.SphereGeometry(0.055, 10, 8);
-    const cheekLeft = new THREE.Mesh(cheekGeometry, accentMaterial);
-    cheekLeft.scale.set(1.3, 0.65, 0.45);
-    cheekLeft.position.set(-0.22, 0.88, 0.35);
-    group.add(cheekLeft);
-    const cheekRight = cheekLeft.clone();
-    cheekRight.position.x = 0.22;
-    group.add(cheekRight);
+    cheekLeft.scale.set(1.55, 0.75, 0.52);
+    cheekRight.scale.copy(cheekLeft.scale);
   }
 
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.028, 8, 48), new THREE.MeshBasicMaterial({ color: cat.accent, transparent: true, opacity: 0, depthWrite: false }));
+  if (cat.pattern === "tail") {
+    const tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 8), creamMaterial);
+    tailTip.position.set(0.49, 1.01, 0.13);
+    group.add(tailTip);
+  }
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.62, 0.036, 8, 56),
+    new THREE.MeshBasicMaterial({ color: cat.accent, transparent: true, opacity: 0, depthWrite: false })
+  );
   ring.rotation.x = Math.PI / 2;
   ring.position.y = 0.05;
   group.add(ring);
@@ -158,22 +204,25 @@ export function createCatMesh(THREE, cat, hitMeshes) {
 
 export function createIsland(THREE) {
   const group = new THREE.Group();
-  const side = makeMaterial(THREE, 0x81c36a, { roughness: 0.84 });
-  const top = makeMaterial(THREE, 0xcdeeb2, { roughness: 0.9 });
-  const bottom = makeMaterial(THREE, 0xb58d5e, { roughness: 0.96 });
-  const island = new THREE.Mesh(new THREE.CylinderGeometry(3.72, 4.25, 0.74, 64, 4, false), [side, top, bottom]);
+  const side = makeMaterial(THREE, 0x58b84f, { roughness: 0.8 });
+  const top = makeMaterial(THREE, 0xbfe98c, { roughness: 0.86 });
+  const bottom = makeMaterial(THREE, 0x8b6346, { roughness: 0.96 });
+  const island = new THREE.Mesh(new THREE.CylinderGeometry(3.72, 4.25, 0.78, 64, 4, false), [side, top, bottom]);
   island.receiveShadow = true;
   island.castShadow = true;
   group.add(island);
-  const grassCap = new THREE.Mesh(new THREE.CylinderGeometry(3.67, 3.7, 0.12, 64), top);
-  grassCap.position.y = 0.42;
+  const grassCap = new THREE.Mesh(new THREE.CylinderGeometry(3.67, 3.7, 0.14, 64), top);
+  grassCap.position.y = 0.44;
   grassCap.receiveShadow = true;
   group.add(grassCap);
-  const path = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.08, 8, 96), new THREE.MeshBasicMaterial({ color: 0xa4d58b, transparent: true, opacity: 0.7 }));
+  const path = new THREE.Mesh(
+    new THREE.TorusGeometry(2.3, 0.085, 8, 96),
+    new THREE.MeshBasicMaterial({ color: 0x6fae66, transparent: true, opacity: 0.64 })
+  );
   path.rotation.x = Math.PI / 2;
-  path.position.y = 0.5;
+  path.position.y = 0.53;
   group.add(path);
-  const hillMaterial = makeMaterial(THREE, 0xb9e6a2, { roughness: 0.9 });
+  const hillMaterial = makeMaterial(THREE, 0x95d773, { roughness: 0.88 });
   [[-2.45, 0.42, -0.8, 0.72], [2.5, 0.42, -0.45, 0.9], [-0.5, 0.42, 2.65, 0.62]].forEach(([x, y, z, scale]) => {
     const hill = new THREE.Mesh(new THREE.SphereGeometry(0.8, 20, 14), hillMaterial);
     hill.scale.set(scale * 1.45, scale * 0.52, scale);
@@ -186,10 +235,10 @@ export function createIsland(THREE) {
 
 export function createTree(THREE, x, z, scale = 1) {
   const group = new THREE.Group();
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.48, 10), makeMaterial(THREE, 0x9a7049));
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.48, 10), makeMaterial(THREE, 0x81583b));
   trunk.position.y = 0.68;
   group.add(trunk);
-  const crownMaterial = makeMaterial(THREE, 0x82cf7a, { roughness: 0.9 });
+  const crownMaterial = makeMaterial(THREE, 0x43bb63, { roughness: 0.86 });
   [[0, 1.02, 0, 0.31], [-0.16, 0.9, 0.03, 0.25], [0.16, 0.9, -0.02, 0.25]].forEach(([cx, cy, cz, radius]) => {
     const crown = new THREE.Mesh(new THREE.SphereGeometry(radius, 14, 10), crownMaterial);
     crown.position.set(cx, cy, cz);
@@ -208,7 +257,7 @@ export function createHouse(THREE, x, z, color = 0xfff6dc, roof = 0xffd765, scal
   const roofMesh = new THREE.Mesh(new THREE.ConeGeometry(0.58, 0.65, 12), makeMaterial(THREE, roof));
   roofMesh.position.y = 1.35;
   group.add(roofMesh);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.3, 0.035), makeMaterial(THREE, 0x84c8f4));
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.3, 0.035), makeMaterial(THREE, 0x2d8ccc));
   door.position.set(0, 0.63, 0.4);
   group.add(door);
   const windowMesh = new THREE.Mesh(new THREE.CircleGeometry(0.075, 18), new THREE.MeshBasicMaterial({ color: 0x9ee5ff }));
@@ -222,21 +271,30 @@ export function createHouse(THREE, x, z, color = 0xfff6dc, roof = 0xffd765, scal
 
 export function createBowl(THREE) {
   const group = new THREE.Group();
-  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.9, 40), new THREE.MeshBasicMaterial({ color: 0x113b52, transparent: true, opacity: 0.22, depthWrite: false }));
+  const shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.9, 40),
+    new THREE.MeshBasicMaterial({ color: 0x0e3447, transparent: true, opacity: 0.24, depthWrite: false })
+  );
   shadow.rotation.x = -Math.PI / 2;
   shadow.scale.set(1.25, 0.62, 1);
   group.add(shadow);
-  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.78, 0.48, 40, 1, true), makeMaterial(THREE, 0x17384d, { roughness: 0.48 }));
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.78, 0.48, 40, 1, true), makeMaterial(THREE, 0x12384f, { roughness: 0.44 }));
   bowl.position.y = 0.28;
   group.add(bowl);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.09, 12, 48), makeMaterial(THREE, 0x0f3043, { roughness: 0.4 }));
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.09, 12, 48), makeMaterial(THREE, 0x072b3e, { roughness: 0.38 }));
   rim.rotation.x = Math.PI / 2;
   rim.position.y = 0.51;
   group.add(rim);
-  const food = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.08, 40), makeMaterial(THREE, 0xf2c65e, { roughness: 0.78, emissive: 0x7a5512, emissiveIntensity: 0.05 }));
+  const food = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.58, 0.58, 0.08, 40),
+    makeMaterial(THREE, 0xffd44e, { roughness: 0.72, emissive: 0x7a5512, emissiveIntensity: 0.12 })
+  );
   food.position.y = 0.49;
   group.add(food);
-  const pulse = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.035, 8, 64), new THREE.MeshBasicMaterial({ color: 0xffdf79, transparent: true, opacity: 0, depthWrite: false }));
+  const pulse = new THREE.Mesh(
+    new THREE.TorusGeometry(0.92, 0.04, 8, 64),
+    new THREE.MeshBasicMaterial({ color: 0xffd44e, transparent: true, opacity: 0, depthWrite: false })
+  );
   pulse.rotation.x = Math.PI / 2;
   pulse.position.y = 0.05;
   group.add(pulse);
@@ -247,7 +305,7 @@ export function createBowl(THREE) {
 
 export function createCloud(THREE, x, y, z, scale = 1) {
   const group = new THREE.Group();
-  const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.42, depthWrite: false });
+  const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.34, depthWrite: false });
   [[0, 0, 0, 0.46], [-0.42, -0.03, 0.04, 0.32], [0.4, -0.02, 0.03, 0.35], [0.1, 0.18, -0.02, 0.34]].forEach(([cx, cy, cz, radius]) => {
     const puff = new THREE.Mesh(new THREE.SphereGeometry(radius, 14, 10), material);
     puff.position.set(cx, cy, cz);
