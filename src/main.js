@@ -20,6 +20,7 @@ const game = createSoundIslandGame({
 shell.bindActions({
   start: game.start,
   listen: game.listen,
+  submit: game.submitSelected,
   next: game.next,
   setStage: game.setStage
 });
@@ -31,6 +32,7 @@ window.miaosicDebug = {
   playTarget: game.listen,
   sampleCat: game.sampleCat,
   submitCat: game.submitCat,
+  submitSelected: game.submitSelected,
   nextRound: game.next,
   setStage: game.setStage,
   resetProgress: game.resetProgress,
