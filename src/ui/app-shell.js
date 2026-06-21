@@ -51,23 +51,31 @@ export function createAppShell(app) {
         <div class="cat-label-layer" data-cat-labels aria-hidden="true"></div>
       </section>
       <header class="hud-top">
-        <div class="brand-card"><span class="brand-kicker">MIAOSIC</span><strong data-region-name>音乐岛</strong><span data-stage-name>初声草坡</span></div>
-        <div class="round-progress" data-round-progress aria-label="回合进度"></div>
+        <div class="brand-card">
+          <span class="brand-kicker">MIAOSIC</span>
+          <strong data-stage-name>初声草坡</strong>
+        </div>
+        <div class="top-status">
+          <div class="round-progress" data-round-progress aria-label="回合进度"></div>
+          <div class="score-card"><strong data-score>0</strong><span>连击 <b data-combo>0</b></span></div>
+        </div>
         <div class="hud-actions">
           <button class="icon-button" type="button" data-open="map" aria-label="打开区域地图">${icon("map")}</button>
           <button class="icon-button" type="button" data-open="album" aria-label="打开猫咪音册">${icon("album")}</button>
         </div>
-        <div class="score-card"><span>得分</span><strong data-score>0</strong><small>连击 <b data-combo>0</b></small></div>
       </header>
       <div class="scene-tip" data-scene-tip hidden></div>
       <footer class="mission-dock" data-mission-dock>
         <div class="mission-copy">
           <span class="mission-kicker" data-mission-kicker>准备登岛</span>
           <strong data-mission-title>听一声，找到那只猫</strong>
-          <p data-mission-copy>听猫粮的声音，再去岛上寻找叫声一样的猫。</p>
+          <p data-mission-copy>听猫粮，再点猫比较声音。</p>
           <div class="mission-meta"><span data-sampled>已试听 0 / 3</span><span data-errors>本轮失误 0</span></div>
         </div>
-        <button class="primary-action" type="button" data-action="listen">${icon("speaker")}<span data-listen-label>听猫粮</span></button>
+        <div class="mission-actions">
+          <button class="secondary-action" type="button" data-action="replay" aria-label="重听猫粮" hidden>${icon("speaker")}</button>
+          <button class="primary-action" type="button" data-action="primary" data-mode="listen">${icon("speaker")}<span data-primary-label>听猫粮</span></button>
+        </div>
       </footer>
       <div class="modal-layer" data-modal-layer hidden>
         <button class="modal-scrim" type="button" data-close-panel aria-label="关闭弹窗"></button>
@@ -77,12 +85,24 @@ export function createAppShell(app) {
   `;
 
   const refs = {
-    shell: app.querySelector("[data-game-shell]"), scene: app.querySelector("[data-scene]"), labels: app.querySelector("[data-cat-labels]"),
-    regionName: app.querySelector("[data-region-name]"), stageName: app.querySelector("[data-stage-name]"), progress: app.querySelector("[data-round-progress]"),
-    score: app.querySelector("[data-score]"), combo: app.querySelector("[data-combo]"), missionKicker: app.querySelector("[data-mission-kicker]"),
-    missionTitle: app.querySelector("[data-mission-title]"), missionCopy: app.querySelector("[data-mission-copy]"), sampled: app.querySelector("[data-sampled]"),
-    errors: app.querySelector("[data-errors]"), listen: app.querySelector('[data-action="listen"]'), listenLabel: app.querySelector("[data-listen-label]"),
-    tip: app.querySelector("[data-scene-tip]"), modalLayer: app.querySelector("[data-modal-layer]"), modalCard: app.querySelector("[data-modal-card]")
+    shell: app.querySelector("[data-game-shell]"),
+    scene: app.querySelector("[data-scene]"),
+    labels: app.querySelector("[data-cat-labels]"),
+    stageName: app.querySelector("[data-stage-name]"),
+    progress: app.querySelector("[data-round-progress]"),
+    score: app.querySelector("[data-score]"),
+    combo: app.querySelector("[data-combo]"),
+    missionKicker: app.querySelector("[data-mission-kicker]"),
+    missionTitle: app.querySelector("[data-mission-title]"),
+    missionCopy: app.querySelector("[data-mission-copy]"),
+    sampled: app.querySelector("[data-sampled]"),
+    errors: app.querySelector("[data-errors]"),
+    primary: app.querySelector('[data-action="primary"]'),
+    primaryLabel: app.querySelector("[data-primary-label]"),
+    replay: app.querySelector('[data-action="replay"]'),
+    tip: app.querySelector("[data-scene-tip]"),
+    modalLayer: app.querySelector("[data-modal-layer]"),
+    modalCard: app.querySelector("[data-modal-card]")
   };
 
   let latestState = null;
@@ -92,18 +112,21 @@ export function createAppShell(app) {
   const labelNodes = new Map();
 
   const closePanel = () => {
-    if (panel === "map" || panel === "album") { panel = null; renderModal(); }
+    if (panel === "map" || panel === "album") {
+      panel = null;
+      renderModal();
+    }
   };
 
   const introMarkup = () => `
     <div class="intro-card-content">
       <span class="modal-chip">找声音玩法</span>
-      <h1>听一声，找到那只猫</h1>
-      <p class="modal-lead">猫粮会发出目标声音。转动音乐岛，点猫试听，再把同声猫拖进碗里。</p>
+      <h1>听一声，选一只猫</h1>
+      <p class="modal-lead">猫粮会发出目标声音。点猫试听，选好后按“喂给猫粮”验证答案。</p>
       <div class="how-grid">
         <div class="how-step"><span>${icon("speaker")}</span><strong>听猫粮</strong><small>记住目标声音</small></div>
-        <div class="how-step"><span>${icon("cat")}</span><strong>试听猫</strong><small>比较谁最接近</small></div>
-        <div class="how-step"><span>${icon("bowl")}</span><strong>拖去投喂</strong><small>同声就成功</small></div>
+        <div class="how-step"><span>${icon("cat")}</span><strong>点猫试听</strong><small>随时切换选择</small></div>
+        <div class="how-step"><span>${icon("bowl")}</span><strong>确认投喂</strong><small>验证你的判断</small></div>
       </div>
       <button class="modal-primary" type="button" data-modal-action="start">开始找声音 ${icon("arrow")}</button>
     </div>`;
@@ -113,9 +136,12 @@ export function createAppShell(app) {
     const cat = reward.cat || state.targetCat;
     const token = reward.token || state.targetToken;
     return `<div class="reward-content">
-      <span class="modal-chip">找到同声猫</span><div class="reward-portrait">${catPortrait(cat)}</div>
-      <h2>${cat?.name || "新朋友"}加入音册</h2><span class="sound-badge">${token?.solfege || "声音"} · ${token?.label || ""}</span>
-      <p>${token?.memory || "你把声音和角色连在了一起。"}</p><strong class="reward-score">本轮 +${reward.points || 100}</strong>
+      <span class="modal-chip">找到同声猫</span>
+      <div class="reward-portrait">${catPortrait(cat)}</div>
+      <h2>${cat?.name || "新朋友"}加入音册</h2>
+      <span class="sound-badge">${token?.solfege || "声音"} · ${token?.label || ""}</span>
+      <p>${token?.memory || "你把声音和角色连在了一起。"}</p>
+      <strong class="reward-score">本轮 +${reward.points || 100}</strong>
       <button class="modal-primary" type="button" data-modal-action="next">继续找下一只 ${icon("arrow")}</button>
     </div>`;
   };
@@ -129,7 +155,8 @@ export function createAppShell(app) {
           const current = state.stage.id === stage.id;
           const mastery = state.progress.mastery[stage.id] || 0;
           return `<button class="stage-card${current ? " is-current" : ""}${unlocked ? "" : " is-locked"}" type="button" data-stage="${stage.id}" ${unlocked ? "" : "disabled"}>
-            <span class="stage-index">${String(index + 1).padStart(2, "0")}</span><span class="stage-card-copy"><strong>${stage.name}</strong><small>${stage.shortName}</small><p>${stage.description}</p><b>${unlocked ? `${mastery}/${stage.rounds}` : `${icon("lock")} 累计完成 ${stage.unlockAt} 次后开放`}</b></span>
+            <span class="stage-index">${String(index + 1).padStart(2, "0")}</span>
+            <span class="stage-card-copy"><strong>${stage.name}</strong><small>${stage.shortName}</small><p>${stage.description}</p><b>${unlocked ? `${mastery}/${stage.rounds}` : `${icon("lock")} 累计完成 ${stage.unlockAt} 次后开放`}</b></span>
           </button>`;
         }).join("")}
         <p class="panel-footnote">当前累计完成 ${total} 次同声投喂。</p>
@@ -139,12 +166,14 @@ export function createAppShell(app) {
   const albumMarkup = (state) => {
     const collected = new Set(state.progress.collected || []);
     return `<div class="panel-head"><div><span class="panel-kicker">SOUND COLLECTION</span><h2>猫咪音册</h2></div><button class="panel-close" type="button" data-close-panel aria-label="关闭">${icon("close")}</button></div>
-      <div class="panel-scroll"><div class="album-summary"><strong>${collected.size} / ${state.roster.length}</strong><span>每次成功投喂，都会把对应声音留进猫咪音册。</span></div>
-      <div class="album-grid">${state.roster.map((cat) => {
-        const unlocked = collected.has(cat.id);
-        const token = state.tokens[cat.token];
-        return `<article class="album-card${unlocked ? "" : " is-locked"}">${catPortrait(cat, !unlocked)}<strong>${unlocked ? cat.name : "尚未遇见"}</strong><span>${unlocked ? `${token.solfege} · ${token.label}` : "继续在音乐岛找声音"}</span><small>${unlocked ? token.memory : "完成对应声音后解锁"}</small></article>`;
-      }).join("")}</div></div>`;
+      <div class="panel-scroll">
+        <div class="album-summary"><strong>${collected.size} / ${state.roster.length}</strong><span>每次正确投喂，都会把对应声音和猫咪留进音册。</span></div>
+        <div class="album-grid">${state.roster.map((cat) => {
+          const unlocked = collected.has(cat.id);
+          const token = state.tokens[cat.token];
+          return `<article class="album-card${unlocked ? "" : " is-locked"}">${catPortrait(cat, !unlocked)}<strong>${unlocked ? cat.name : "尚未遇见"}</strong><span>${unlocked ? `${token.solfege} · ${token.label}` : "继续在音乐岛找声音"}</span><small>${unlocked ? token.memory : "完成对应声音后解锁"}</small></article>`;
+        }).join("")}</div>
+      </div>`;
   };
 
   const renderModal = () => {
@@ -152,7 +181,14 @@ export function createAppShell(app) {
     if (!latestState.started) panel = "intro";
     if (latestState.phase === "reward") panel = "reward";
     if (latestState.started && latestState.phase !== "reward" && (panel === "intro" || panel === "reward")) panel = null;
-    if (!panel) { refs.modalLayer.hidden = true; refs.modalCard.innerHTML = ""; refs.shell.classList.remove("has-modal"); return; }
+
+    if (!panel) {
+      refs.modalLayer.hidden = true;
+      refs.modalCard.innerHTML = "";
+      refs.shell.classList.remove("has-modal");
+      return;
+    }
+
     refs.modalLayer.hidden = false;
     refs.shell.classList.add("has-modal");
     refs.modalCard.className = `modal-card modal-${panel}`;
@@ -163,22 +199,54 @@ export function createAppShell(app) {
   };
 
   const missionText = (state) => {
-    if (!state.started) return ["准备登岛", "听一声，找到那只猫", "听猫粮的声音，再去岛上寻找叫声一样的猫。"];
-    if (state.phase === "listen") return ["先听目标", "点一下猫粮，记住它的声音", "声音不会显示答案。先让耳朵记住，再开始找猫。"];
-    if (state.phase === "search") {
-      if (state.selectedCatId === state.targetCat.id) return ["已经锁定", "把这只猫拖进碗里", `你听到的是 ${state.targetCat.name}。按住它，拖到屏幕下方的猫粮碗。`];
-      if (state.sampledIds.length) return ["正在比较", "继续试听，找到最像的猫", state.feedback || "拖动空地旋转音乐岛，点不同的猫比较声音。"];
-      return ["开始寻找", "旋转音乐岛，点猫试听", "点猫只会试听，不会直接判错。听到匹配后，再把它拖进碗里。"];
+    if (!state.started) return ["准备登岛", "听一声，选一只猫", "听猫粮，再点猫比较声音。"];
+    if (state.phase === "listen") return ["先听目标", "听清猫粮的声音", "声音不会显示答案。先让耳朵记住它。"];
+    if (state.phase === "feeding") return ["投喂中", `${state.selectedCat?.name || "猫咪"}正在跑向猫粮`, "马上揭晓你的判断。"];
+    if (state.phase === "search" && state.selectedCat) {
+      return ["已经选择", `${state.selectedCat.name}，要投喂吗？`, state.feedback || "可以重听目标，也可以直接确认。"];
     }
-    if (state.phase === "drag") return ["投喂中", "把猫放进猫粮碗", "松手前对准碗口。同声会成功，不同声可以继续找。"];
+    if (state.phase === "search" && state.sampledIds.length) {
+      return ["继续寻找", "再点一只猫试听", state.feedback || "左右滑动转岛，点猫比较声音。"];
+    }
+    if (state.phase === "search") return ["开始寻找", "点一只猫试听", "左右滑动转岛；点猫只试听，不会立刻判错。"];
     if (state.phase === "reward") return ["声音已收集", `${state.targetCat.name}加入猫咪音册`, state.targetToken.memory];
     return ["音乐岛", "继续找声音", "听清楚再行动。"];
+  };
+
+  const renderPrimaryAction = (state) => {
+    const canReplay = state.started && state.heardTarget && state.phase === "search";
+    refs.replay.hidden = !canReplay;
+
+    let mode = "listen";
+    let label = state.heardTarget ? "重听猫粮" : "听猫粮";
+    let iconName = "speaker";
+    let disabled = state.phase === "feeding" || state.phase === "reward";
+
+    if (state.phase === "feeding") {
+      mode = "feeding";
+      label = "正在投喂";
+      iconName = "bowl";
+    } else if (state.phase === "search" && state.selectedCat) {
+      mode = "submit";
+      label = `喂 ${state.selectedCat.name}`;
+      iconName = "bowl";
+      disabled = false;
+    } else if (state.phase === "search" && !state.selectedCat) {
+      mode = "waiting";
+      label = "先点一只猫";
+      iconName = "cat";
+      disabled = true;
+    }
+
+    refs.primary.dataset.mode = mode;
+    refs.primary.disabled = disabled;
+    refs.primary.innerHTML = `${icon(iconName)}<span data-primary-label>${label}</span>`;
+    refs.primaryLabel = refs.primary.querySelector("[data-primary-label]");
   };
 
   const render = (state) => {
     latestState = state;
     refs.shell.dataset.phase = state.phase;
-    refs.regionName.textContent = "音乐岛";
     refs.stageName.textContent = state.stage.name;
     refs.score.textContent = String(state.progress.score || 0);
     refs.combo.textContent = String(state.progress.combo || 0);
@@ -187,14 +255,14 @@ export function createAppShell(app) {
       const current = index === state.round - 1;
       return `<span class="round-dot${complete ? " is-complete" : ""}${current ? " is-current" : ""}">${complete ? icon("check") : ""}</span>`;
     }).join("");
+
     const [kicker, title, copy] = missionText(state);
     refs.missionKicker.textContent = kicker;
     refs.missionTitle.textContent = title;
     refs.missionCopy.textContent = copy;
     refs.sampled.textContent = `已试听 ${state.sampledIds.length} / ${state.activeCats.length}`;
     refs.errors.textContent = `本轮失误 ${state.roundErrors}`;
-    refs.listenLabel.textContent = state.heardTarget ? "重听" : "听猫粮";
-    refs.listen.disabled = state.phase === "reward" || state.phase === "drag";
+    renderPrimaryAction(state);
     renderModal();
   };
 
@@ -203,16 +271,28 @@ export function createAppShell(app) {
     labels.forEach((label) => {
       liveIds.add(label.id);
       let node = labelNodes.get(label.id);
-      if (!node) { node = document.createElement("div"); node.className = "cat-label"; node.innerHTML = `<strong></strong><small></small>`; refs.labels.appendChild(node); labelNodes.set(label.id, node); }
+      if (!node) {
+        node = document.createElement("div");
+        node.className = "cat-label";
+        node.innerHTML = `<strong></strong><small></small>`;
+        refs.labels.appendChild(node);
+        labelNodes.set(label.id, node);
+      }
+      const shouldShow = label.visible && (label.sampled || label.selected);
       node.style.transform = `translate3d(${Math.round(label.x)}px, ${Math.round(label.y)}px, 0) translate(-50%, -100%)`;
-      node.style.opacity = label.visible ? "1" : "0";
+      node.style.opacity = shouldShow ? "1" : "0";
       node.style.zIndex = String(Math.round(1000 - label.depth * 100));
       node.classList.toggle("is-sampled", Boolean(label.sampled));
       node.classList.toggle("is-selected", Boolean(label.selected));
       node.querySelector("strong").textContent = label.name;
-      node.querySelector("small").textContent = label.selected ? "拖进碗里" : label.sampled ? "已试听" : "点猫试听";
+      node.querySelector("small").textContent = label.selected ? "已选择" : "已试听";
     });
-    labelNodes.forEach((node, id) => { if (!liveIds.has(id)) { node.remove(); labelNodes.delete(id); } });
+    labelNodes.forEach((node, id) => {
+      if (!liveIds.has(id)) {
+        node.remove();
+        labelNodes.delete(id);
+      }
+    });
   };
 
   const showTip = (message, tone = "info") => {
@@ -221,25 +301,61 @@ export function createAppShell(app) {
     refs.tip.dataset.tone = tone;
     refs.tip.textContent = message;
     requestAnimationFrame(() => refs.tip.classList.add("show"));
-    tipTimer = window.setTimeout(() => { refs.tip.classList.remove("show"); window.setTimeout(() => { refs.tip.hidden = true; }, 180); }, 1800);
+    tipTimer = window.setTimeout(() => {
+      refs.tip.classList.remove("show");
+      window.setTimeout(() => { refs.tip.hidden = true; }, 180);
+    }, 1500);
   };
 
   const onClick = (event) => {
     const open = event.target.closest("[data-open]");
-    if (open) { panel = open.dataset.open; renderModal(); return; }
-    if (event.target.closest("[data-close-panel]")) { closePanel(); return; }
+    if (open) {
+      panel = open.dataset.open;
+      renderModal();
+      return;
+    }
+    if (event.target.closest("[data-close-panel]")) {
+      closePanel();
+      return;
+    }
+
     const modalAction = event.target.closest("[data-modal-action]");
     if (modalAction?.dataset.modalAction === "start") actions.start?.();
     if (modalAction?.dataset.modalAction === "next") actions.next?.();
+
     const stageButton = event.target.closest("[data-stage]");
-    if (stageButton && !stageButton.disabled) { actions.setStage?.(stageButton.dataset.stage); panel = null; renderModal(); }
-    if (event.target.closest('[data-action="listen"]')) actions.listen?.();
+    if (stageButton && !stageButton.disabled) {
+      actions.setStage?.(stageButton.dataset.stage);
+      panel = null;
+      renderModal();
+      return;
+    }
+
+    if (event.target.closest('[data-action="replay"]')) {
+      actions.listen?.();
+      return;
+    }
+
+    const primary = event.target.closest('[data-action="primary"]');
+    if (!primary || primary.disabled) return;
+    if (primary.dataset.mode === "submit") actions.submit?.();
+    else actions.listen?.();
   };
 
   refs.shell.addEventListener("click", onClick);
+
   return {
-    scene: refs.scene, render, setCatLabels, showTip,
-    bindActions(nextActions) { actions = { ...actions, ...nextActions }; },
-    destroy() { window.clearTimeout(tipTimer); refs.shell.removeEventListener("click", onClick); app.innerHTML = ""; }
+    scene: refs.scene,
+    render,
+    setCatLabels,
+    showTip,
+    bindActions(nextActions) {
+      actions = { ...actions, ...nextActions };
+    },
+    destroy() {
+      window.clearTimeout(tipTimer);
+      refs.shell.removeEventListener("click", onClick);
+      app.innerHTML = "";
+    }
   };
 }
