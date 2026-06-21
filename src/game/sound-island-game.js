@@ -40,6 +40,7 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
   const targetToken = () => getToken(state.targetTokenId);
   const targetCat = () => getCatForToken(stage(), state.targetTokenId);
   const activeCats = () => getStageCats(state.stageId);
+  const selectedCat = () => activeCats().find((cat) => cat.id === state.selectedCatId) || null;
   const unlockedStageIds = () => {
     const total = getTotalMastery(progress.mastery);
     return STAGES.filter((item) => total >= item.unlockAt).map((item) => item.id);
@@ -54,6 +55,7 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
     heardTarget: state.heardTarget,
     sampledIds: [...state.sampledIds],
     selectedCatId: state.selectedCatId,
+    selectedCat: selectedCat(),
     roundErrors: state.roundErrors,
     feedback: state.feedback,
     targetToken: targetToken(),
@@ -104,10 +106,12 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
   };
 
   const listen = async () => {
-    if (!state.started || state.phase === "reward") return false;
+    if (!state.started || state.phase === "reward" || state.phase === "feeding") return false;
     state.heardTarget = true;
     state.phase = "search";
-    state.feedback = "目标声音已播放。旋转音乐岛，点猫试听。";
+    state.feedback = state.selectedCatId
+      ? `再听一次目标，再决定是否投喂 ${selectedCat()?.name || "这只猫"}。`
+      : "目标声音已播放。点一只猫试听，再决定是否投喂。";
     sceneController.pulseBowl();
     emit(true);
     await audio.playTarget(targetToken());
@@ -115,36 +119,23 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
   };
 
   const sampleCat = async (catId) => {
-    if (!state.started || !state.heardTarget || state.phase === "reward") return false;
+    if (!state.started || !state.heardTarget || state.phase === "reward" || state.phase === "feeding") return false;
     const cat = activeCats().find((item) => item.id === catId);
     if (!cat) return false;
+
     if (!state.sampledIds.includes(catId)) state.sampledIds.push(catId);
-
-    const heard = getToken(cat.token);
-    const expected = targetToken();
-    const correct = cat.token === state.targetTokenId;
     state.phase = "search";
-    state.selectedCatId = correct ? catId : null;
-    sceneController.pulseCat(catId, correct);
+    state.selectedCatId = catId;
+    state.feedback = `已选择 ${cat.name}。可以重听目标，或直接投喂验证。`;
+    sceneController.selectCat(catId);
     emit(true);
-    await audio.playCat(heard);
-
-    if (correct) {
-      state.feedback = "声音一样。按住这只猫，把它拖进猫粮碗。";
-      onTip("找到了同声猫，拖进碗里", "good");
-    } else {
-      const difference = tokenPitch(heard) - tokenPitch(expected);
-      state.feedback = heard.kind === "note"
-        ? `这只猫${difference > 0 ? "更高" : "更低"}，继续比较。`
-        : "声音颜色不同，继续比较。";
-      onTip(state.feedback, "warn");
-    }
-    emit(true);
-    return correct;
+    await audio.playCat(getToken(cat.token));
+    onTip(`${cat.name}：试听完成`, "info");
+    return true;
   };
 
   const submitCat = async (catId) => {
-    if (!state.started || !state.heardTarget || state.phase === "reward") return false;
+    if (!state.started || !state.heardTarget || state.phase === "reward" || state.phase === "feeding") return false;
     const cat = activeCats().find((item) => item.id === catId);
     if (!cat) return false;
     const correct = cat.token === state.targetTokenId;
@@ -155,10 +146,15 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
       progress.score = Math.max(0, progress.score - 10);
       state.phase = "search";
       state.selectedCatId = null;
-      state.feedback = "不是同声猫。可以重听猫粮，再继续找。";
+      const heard = getToken(cat.token);
+      const difference = tokenPitch(heard) - tokenPitch(targetToken());
+      state.feedback = heard.kind === "note"
+        ? `${cat.name}比目标${difference > 0 ? "更高" : "更低"}。换一只再试。`
+        : `${cat.name}的声音颜色不一样。换一只再试。`;
       saveProgress(progress);
-      audio.playWrong(tokenPitch(getToken(cat.token)) - tokenPitch(targetToken()));
-      onTip("不是同声猫，继续找", "warn");
+      sceneController.rejectCat(cat.id);
+      audio.playWrong(difference);
+      onTip(state.feedback, "warn");
       emit(true);
       return false;
     }
@@ -176,14 +172,26 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
     progress.rounds[state.stageId] = state.round;
     saveProgress(progress);
 
+    state.phase = "feeding";
+    state.feedback = `${cat.name}正在跑向猫粮。`;
+    emit(true);
+    await sceneController.feedCat(cat.id, cat.accent);
+    await audio.playSuccess();
+
     state.phase = "reward";
     state.reward = { cat, token: targetToken(), points, firstDiscovery };
     state.feedback = "同声投喂成功。";
-    sceneController.celebrate(cat.id, cat.accent);
-    audio.playSuccess();
     onTip(`同声投喂成功 +${points}`, "good");
     emit(true);
     return true;
+  };
+
+  const submitSelected = () => {
+    if (!state.selectedCatId) {
+      onTip("先点一只猫试听", "warn");
+      return false;
+    }
+    return submitCat(state.selectedCatId);
   };
 
   sceneController = createIslandScene({
@@ -191,7 +199,6 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
     host,
     getState: publicState,
     onSample: sampleCat,
-    onSubmit: submitCat,
     onLabels,
     onTip
   });
@@ -201,10 +208,10 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
   const start = async () => {
     state.started = true;
     state.phase = "listen";
-    state.feedback = "先听猫粮，再去岛上寻找。";
+    state.feedback = "先听猫粮，再点猫试听。";
     emit(true);
     await audio.resume();
-    window.setTimeout(() => listen(), 180);
+    window.setTimeout(() => listen(), 120);
   };
 
   const next = () => {
@@ -215,7 +222,7 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
     state.phase = "listen";
     prepareRound();
     emit(true);
-    window.setTimeout(() => listen(), 260);
+    window.setTimeout(() => listen(), 220);
     return true;
   };
 
@@ -232,7 +239,7 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
     prepareRound();
     saveProgress(progress);
     emit(true);
-    if (state.started) window.setTimeout(() => listen(), 220);
+    if (state.started) window.setTimeout(() => listen(), 180);
     return true;
   };
 
@@ -259,6 +266,7 @@ export function createSoundIslandGame({ THREE, host, onState = () => {}, onLabel
     setStage,
     sampleCat,
     submitCat,
+    submitSelected,
     resetProgress,
     getState: publicState,
     getActiveCats: activeCats,
